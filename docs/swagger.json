@@ -1,0 +1,12 @@
+{
+    "components": {
+        "schemas": {}
+    },
+    "info": {
+        "title": "SocialApp API",
+        "version": "1.0.0",
+        "description": "Generated with `routing-controllers-openapi`"
+    },
+    "openapi": "3.0.0",
+    "paths": {}
+}

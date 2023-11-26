@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "es6",                          
+    "module": "commonjs",                    
+    "lib": ["es6"],                     
+    "outDir": "build",                          
+    "rootDir": "src",
+    "strict": true,         
+    "noImplicitAny": false,
+    "esModuleInterop": true,
+    "inlineSourceMap": true,
+    "resolveJsonModule": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "strictPropertyInitialization": false,
+  },
+  "include": ["src"],
+  "exclude": ["node_modules"]
+}
