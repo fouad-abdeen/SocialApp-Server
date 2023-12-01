@@ -1,18 +1,22 @@
 import express from "express";
 import * as httpContext from "express-http-context";
-import { useContainer, useExpressServer } from "routing-controllers";
+import cookieParser from "cookie-parser";
+import { Action, useContainer, useExpressServer } from "routing-controllers";
 import { Container } from "typedi";
-import { env } from ".";
 import swaggerUiExpress from "swagger-ui-express";
 import { getSwaggerSpec } from "./swagger.config";
+import { env } from ".";
+import { AuthService } from "../../services";
 
 export class Express {
   readonly app: express.Application;
+  private authService: AuthService;
 
   constructor(dirname: string) {
     this.app = express();
 
     this.app.use(httpContext.middleware);
+    this.app.use(cookieParser());
 
     // Attach typedi container to routing-controllers
     useContainer(Container);
@@ -34,6 +38,12 @@ export class Express {
       controllers: [dirname + "/controllers/*.ts"],
       middlewares: [dirname + "/core/middlewares/*.ts"],
       interceptors: [dirname + "/core/interceptors/*.ts"],
+
+      authorizationChecker: async (action: Action) => {
+        if (!this.authService) this.authService = Container.get(AuthService);
+        await this.authService.authorizeUser(action);
+        return true;
+      },
     });
   }
 
