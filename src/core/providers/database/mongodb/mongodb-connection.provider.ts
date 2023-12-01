@@ -1,6 +1,15 @@
 import { IMongoConnectionProvider } from "./mongo.interface";
-import { connect, Connection, connection, Model } from "mongoose";
-import { AnyParamConstructor } from "@typegoose/typegoose/lib/types";
+import {
+  connect,
+  Connection,
+  connection,
+  Model,
+  SchemaOptions,
+} from "mongoose";
+import {
+  AnyParamConstructor,
+  ReturnModelType,
+} from "@typegoose/typegoose/lib/types";
 import { Logger } from "../../../logger";
 import { getModelForClass } from "@typegoose/typegoose";
 import { BaseService } from "../../../base.service";
@@ -40,10 +49,14 @@ export class MongodbConnectionProvider
     }
   }
 
-  getModel<T, U extends AnyParamConstructor<T>>(documentClass: U): Model<any> {
+  getModel<T, U extends AnyParamConstructor<T>>(
+    documentClass: U,
+    schemaOptions?: SchemaOptions
+  ): ReturnModelType<U> {
     this.dbConnectionCheck();
     return getModelForClass(documentClass, {
       existingConnection: this._connection,
+      schemaOptions,
     });
   }
 

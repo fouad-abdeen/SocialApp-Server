@@ -1,6 +1,9 @@
-import { AnyParamConstructor } from "@typegoose/typegoose/lib/types";
+import {
+  AnyParamConstructor,
+  ReturnModelType,
+} from "@typegoose/typegoose/lib/types";
 import { Logger } from "../../..";
-import { Model } from "mongoose";
+import { Model, SchemaOptions } from "mongoose";
 
 export interface IMongoConnectionProvider {
   /**
@@ -11,10 +14,14 @@ export interface IMongoConnectionProvider {
 
   /**
    * Creates a mongoose model from a class.
-   * @param documentClass Unintialized MongoDB Document Class (used to create mongoose model from class).
+   * @param documentClass Unintialized MongoDB Document class used to create the model.
+   * @param schemaOptions Custom schema options to use when creating the model.
    * @returns Mongoose Model.
    **/
-  getModel<T, U extends AnyParamConstructor<T>>(documentClass: U): Model<any>;
+  getModel<T, U extends AnyParamConstructor<T>>(
+    documentClass: U,
+    schemaOptions?: SchemaOptions
+  ): ReturnModelType<U>;
 
   /**
    * Closes the current connection created when initializing the service.

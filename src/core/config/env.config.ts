@@ -47,5 +47,41 @@ export const env = {
     hashingSaltRounds: parseInt(
       getEnvVariable("AUTH_HASHING_SALT_ROUNDS", "10")
     ),
+    jwtSecretKey: getEnvVariable("JWT_SECRET_KEY"),
+    accessTokenExpiresIn: getEnvVariable("JWT_ACCESS_TOKEN_EXPIRES_IN", "1h"),
+    refreshTokenExpiresIn: getEnvVariable("JWT_REFRESH_TOKEN_EXPIRES_IN", "1d"),
+    emailVerificationTokenExpiresIn: getEnvVariable(
+      "JWT_EMAIL_VERIFICATION_TOKEN_EXPIRES_IN",
+      "1d"
+    ),
+    passwordResetTokenExpiresIn: getEnvVariable(
+      "JWT_PASSWORD_RESET_TOKEN_EXPIRES_IN",
+      "6h"
+    ),
+  },
+
+  frontend: {
+    url: getEnvVariable("FRONTEND_URL", "http://localhost:5173"),
+    emailVerificationUrl: getEnvVariable(
+      "FRONTEND_EMAIL_VERIFICATION_URL",
+      "http://localhost:5173/email-verification"
+    ),
+    passwordResetUrl: getEnvVariable(
+      "FRONTEND_PASSWORD_RESET_URL",
+      "http://localhost:5173/reset-password"
+    ),
+  },
+
+  mail: {
+    senderName: getEnvVariable("BREVO_SENDER_NAME", "Fouad at SocialApp"),
+    senderMailAddress: getEnvVariable(
+      "BREVO_SENDER_MAIL_ADDRESS",
+      "fouad.abdine@gmail.com"
+    ),
+    brevoApiUrl: getEnvVariable(
+      "BREVO_API_URL",
+      "https://api.brevo.com/v3/smtp/email"
+    ),
+    brevoApiKey: getEnvVariable("BREVO_API_KEY"),
   },
 };

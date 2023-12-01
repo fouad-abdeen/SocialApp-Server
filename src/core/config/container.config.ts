@@ -1,11 +1,36 @@
 import { Container } from "typedi";
-import { Logger, MongodbConnectionProvider, env } from "..";
+import {
+  AuthHashProvider,
+  Logger,
+  MailProvider,
+  MongodbConnectionProvider,
+  env,
+} from "..";
+import { AuthTokenProvider } from "../providers/auth/auth-token.provider";
 
 /**
  * Registers services in container
  * Used for dependency injection
  */
 export const registerServices = async (logger: Logger) => {
+  logger.info("Registering Bcrypt Service");
+  Container.set(AuthHashProvider, new AuthHashProvider());
+
+  logger.info("Registering JWT Service");
+  Container.set(
+    AuthTokenProvider,
+    new AuthTokenProvider(env.auth.jwtSecretKey)
+  );
+
+  logger.info("Registering Mail Service");
+  Container.set(
+    MailProvider,
+    new MailProvider(env.mail.brevoApiUrl, env.mail.brevoApiKey, {
+      name: env.mail.senderName,
+      email: env.mail.senderMailAddress,
+    })
+  );
+
   // #region Setting MongoDB Connection
   logger.info("Registering MongoDB Service");
 
