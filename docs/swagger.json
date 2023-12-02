@@ -1,6 +1,206 @@
 {
     "components": {
-        "schemas": {}
+        "schemas": {
+            "Pagination": {
+                "properties": {
+                    "limit": {
+                        "type": "number"
+                    },
+                    "lastDocumentId": {
+                        "pattern": "^[0-9a-fA-F]{24}$",
+                        "type": "string"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "limit"
+                ]
+            },
+            "UserResponse": {
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "username": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "firstName": {
+                        "type": "string"
+                    },
+                    "lastName": {
+                        "type": "string"
+                    },
+                    "followers": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "followings": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "tweets": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "bio": {
+                        "type": "string"
+                    },
+                    "avatar": {
+                        "type": "string"
+                    },
+                    "verified": {
+                        "type": "boolean"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "username",
+                    "email",
+                    "firstName",
+                    "lastName",
+                    "followers",
+                    "followings",
+                    "tweets",
+                    "bio",
+                    "avatar",
+                    "verified"
+                ]
+            },
+            "UserSearchResponse": {
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "username": {
+                        "type": "string"
+                    },
+                    "firstName": {
+                        "type": "string"
+                    },
+                    "lastName": {
+                        "type": "string"
+                    },
+                    "avatar": {
+                        "type": "string"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "username",
+                    "firstName",
+                    "lastName",
+                    "avatar"
+                ]
+            },
+            "SignupRequest": {
+                "properties": {
+                    "username": {
+                        "type": "string",
+                        "maxLength": 20,
+                        "minLength": 2
+                    },
+                    "password": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "format": "email",
+                        "type": "string"
+                    },
+                    "firstName": {
+                        "type": "string",
+                        "maxLength": 50,
+                        "minLength": 2
+                    },
+                    "lastName": {
+                        "type": "string",
+                        "maxLength": 50,
+                        "minLength": 2
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "username",
+                    "password",
+                    "email",
+                    "firstName",
+                    "lastName"
+                ]
+            },
+            "LoginRequest": {
+                "properties": {
+                    "userIdentifier": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "password": {
+                        "type": "string",
+                        "minLength": 1
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "userIdentifier",
+                    "password"
+                ]
+            },
+            "PasswordResetRequest": {
+                "properties": {
+                    "token": {
+                        "type": "string"
+                    },
+                    "password": {
+                        "type": "string"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "token",
+                    "password"
+                ]
+            },
+            "PasswordUpdateRequest": {
+                "properties": {
+                    "currentPassword": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "newPassword": {
+                        "type": "string"
+                    },
+                    "terminateAllSessions": {
+                        "type": "boolean"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "currentPassword",
+                    "newPassword"
+                ]
+            },
+            "FollowingQueryParams": {
+                "properties": {
+                    "followingId": {
+                        "pattern": "^[0-9a-fA-F]{24}$",
+                        "type": "string"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "followingId"
+                ]
+            }
+        }
     },
     "info": {
         "title": "SocialApp API",
@@ -8,5 +208,326 @@
         "description": "Generated with `routing-controllers-openapi`"
     },
     "openapi": "3.0.0",
-    "paths": {}
+    "paths": {
+        "/users/search": {
+            "get": {
+                "operationId": "UserController.searchUsersByUsername",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "usernameQuery",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "limit",
+                        "required": true,
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "lastDocumentId",
+                        "required": false,
+                        "schema": {
+                            "pattern": "^[0-9a-fA-F]{24}$",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": {
+                                        "$ref": "#/components/schemas/UserSearchResponse"
+                                    },
+                                    "type": "array"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                },
+                "summary": "Search for users by username",
+                "tags": [
+                    "User"
+                ]
+            }
+        },
+        "/users/follow": {
+            "post": {
+                "operationId": "UserController.followUser",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "followingId",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^[0-9a-fA-F]{24}$",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {}
+                        },
+                        "description": "Successful response"
+                    }
+                },
+                "summary": "Follow a user",
+                "tags": [
+                    "User"
+                ]
+            }
+        },
+        "/users/unfollow": {
+            "post": {
+                "operationId": "UserController.unfollowUser",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "followingId",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^[0-9a-fA-F]{24}$",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {}
+                        },
+                        "description": "Successful response"
+                    }
+                },
+                "summary": "Unfollow a user",
+                "tags": [
+                    "User"
+                ]
+            }
+        },
+        "/auth/signup": {
+            "post": {
+                "operationId": "AuthController.signup",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SignupRequest"
+                            }
+                        }
+                    },
+                    "description": "SignupRequest",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserResponse"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                },
+                "summary": "Sign up user",
+                "tags": [
+                    "Auth"
+                ]
+            }
+        },
+        "/auth/login": {
+            "post": {
+                "operationId": "AuthController.login",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LoginRequest"
+                            }
+                        }
+                    },
+                    "description": "LoginRequest",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserResponse"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                },
+                "summary": "Authenticate user",
+                "tags": [
+                    "Auth"
+                ]
+            }
+        },
+        "/auth/logout": {
+            "get": {
+                "operationId": "AuthController.logout",
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {}
+                        },
+                        "description": "Successful response"
+                    }
+                },
+                "summary": "Sign out user",
+                "tags": [
+                    "Auth"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/auth/email/verify": {
+            "put": {
+                "operationId": "AuthController.verifyEmail",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "token",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {}
+                        },
+                        "description": "Successful response"
+                    }
+                },
+                "summary": "Verify email address",
+                "tags": [
+                    "Auth"
+                ]
+            }
+        },
+        "/auth/password": {
+            "get": {
+                "operationId": "AuthController.requestPasswordReset",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "email",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {}
+                        },
+                        "description": "Successful response"
+                    }
+                },
+                "summary": "Send password reset link",
+                "tags": [
+                    "Auth"
+                ]
+            },
+            "post": {
+                "operationId": "AuthController.resetPassword",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PasswordResetRequest"
+                            }
+                        }
+                    },
+                    "description": "PasswordResetRequest",
+                    "required": false
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {}
+                        },
+                        "description": "Successful response"
+                    }
+                },
+                "summary": "Reset user's password",
+                "tags": [
+                    "Auth"
+                ]
+            },
+            "put": {
+                "operationId": "AuthController.updatePassword",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PasswordUpdateRequest"
+                            }
+                        }
+                    },
+                    "description": "PasswordUpdateRequest",
+                    "required": false
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {}
+                        },
+                        "description": "Successful response"
+                    }
+                },
+                "summary": "Update user's password",
+                "tags": [
+                    "Auth"
+                ]
+            }
+        },
+        "/auth/user": {
+            "get": {
+                "operationId": "AuthController.getAuthenticatedUser",
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserResponse"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                },
+                "summary": "Get authenticated user's info",
+                "tags": [
+                    "Auth"
+                ]
+            }
+        }
+    }
 }

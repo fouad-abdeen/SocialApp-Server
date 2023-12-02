@@ -1,4 +1,5 @@
 import { User } from "../../models";
+import { Pagination } from "../../types";
 
 export interface IUserRepository {
   /**
@@ -24,4 +25,14 @@ export interface IUserRepository {
    * @param email email to find user by
    */
   getUserByEmail(email: string): Promise<User>;
+
+  /**
+   * Searches for users by username
+   * @param usernameQuery username to search for
+   * @param pagination pagination options
+   */
+  searchUsersByUsername(
+    usernameQuery: string,
+    pagination: Pagination
+  ): Promise<User[]>;
 }

@@ -1,6 +1,6 @@
 import { index, prop } from "@typegoose/typegoose";
 import { TimeStamps } from "@typegoose/typegoose/lib/defaultClasses";
-import { TokenObject } from "../services";
+import { AuthTokenObject } from "../types";
 
 @index({ username: "text" })
 export class User extends TimeStamps {
@@ -44,8 +44,8 @@ export class User extends TimeStamps {
   @prop({ type: Boolean, default: false })
   public verified!: boolean;
 
-  @prop({ type: TokenObject, default: [] })
-  public tokensDenylist!: TokenObject[];
+  @prop({ type: AuthTokenObject, default: [] })
+  public tokensDenylist!: AuthTokenObject[];
 
   @prop({ type: Number, default: +new Date() })
   public passwordUpdatedAt!: number;

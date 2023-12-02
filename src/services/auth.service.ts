@@ -18,6 +18,13 @@ import {
   SignupRequest,
 } from "../controllers/request";
 import { isEmail } from "class-validator";
+import {
+  AuthPayload,
+  AuthResponse,
+  AuthTokenObject,
+  AuthTokenType,
+  AuthTokens,
+} from "../types";
 
 @Service()
 export class AuthService extends BaseService {
@@ -84,7 +91,7 @@ export class AuthService extends BaseService {
         {
           identityId: id,
           email,
-          tokenType: TokenType.EMAIL_VERIFICATION_TOKEN,
+          tokenType: AuthTokenType.EMAIL_VERIFICATION_TOKEN,
         },
         { expiresIn: env.auth.emailVerificationTokenExpiresIn }
       );
@@ -116,7 +123,7 @@ export class AuthService extends BaseService {
     };
   }
 
-  async signOutUser(tokens: Tokens): Promise<void> {
+  async signOutUser(tokens: AuthTokens): Promise<void> {
     this._logger.info(
       `Attempting to sign out user by invalidating their tokens`
     );
@@ -251,7 +258,7 @@ export class AuthService extends BaseService {
       );
 
       if (payload)
-        if (payload.tokenType !== TokenType.ACCESS_TOKEN)
+        if (payload.tokenType !== AuthTokenType.ACCESS_TOKEN)
           throwError("invalid token", 401);
     } catch (error: any) {
       throwError(
@@ -332,7 +339,7 @@ export class AuthService extends BaseService {
     let id = "",
       email = "",
       tokenExpiry = 0,
-      tokensDenylist: TokenObject[] = [];
+      tokensDenylist: AuthTokenObject[] = [];
 
     // #region Verify Token
     try {
@@ -340,7 +347,7 @@ export class AuthService extends BaseService {
         AuthPayload & { exp: number }
       >(token);
 
-      if (authPayload.tokenType !== TokenType.EMAIL_VERIFICATION_TOKEN)
+      if (authPayload.tokenType !== AuthTokenType.EMAIL_VERIFICATION_TOKEN)
         throwError("invalid token", 401);
 
       id = authPayload.identityId;
@@ -388,7 +395,7 @@ export class AuthService extends BaseService {
       {
         identityId: id,
         email,
-        tokenType: TokenType.PASSWORD_RESET_TOKEN,
+        tokenType: AuthTokenType.PASSWORD_RESET_TOKEN,
       },
       { expiresIn: env.auth.passwordResetTokenExpiresIn }
     );
@@ -413,7 +420,7 @@ export class AuthService extends BaseService {
       email = "",
       verified = false,
       tokenExpiry = 0,
-      tokensDenylist: TokenObject[] = [];
+      tokensDenylist: AuthTokenObject[] = [];
 
     // #region Verify Token
     try {
@@ -421,7 +428,7 @@ export class AuthService extends BaseService {
         AuthPayload & { exp: number }
       >(token);
 
-      if (authPayload.tokenType !== TokenType.PASSWORD_RESET_TOKEN)
+      if (authPayload.tokenType !== AuthTokenType.PASSWORD_RESET_TOKEN)
         throwError("invalid token", 401);
 
       id = authPayload.identityId;
@@ -487,7 +494,7 @@ export class AuthService extends BaseService {
     } as User);
   }
 
-  private refreshAccessToken(refreshToken: string): Tokens {
+  private refreshAccessToken(refreshToken: string): AuthTokens {
     let identityId = "",
       email = "",
       tokenExpiry = 0;
@@ -497,7 +504,7 @@ export class AuthService extends BaseService {
     try {
       const payload = this._tokenService.verifyToken<AuthPayload>(refreshToken);
 
-      if (payload.tokenType !== TokenType.REFRESH_TOKEN)
+      if (payload.tokenType !== AuthTokenType.REFRESH_TOKEN)
         throwError("invalid token", 401);
 
       identityId = payload.identityId;
@@ -533,10 +540,10 @@ export class AuthService extends BaseService {
     return newTokens;
   }
 
-  private getTokens(payload: AuthPayload): Tokens {
+  private getTokens(payload: AuthPayload): AuthTokens {
     this._logger.info("Generating access token");
     const accessToken = this._tokenService.generateToken<AuthPayload>(
-      { ...payload, tokenType: TokenType.ACCESS_TOKEN },
+      { ...payload, tokenType: AuthTokenType.ACCESS_TOKEN },
       {
         expiresIn: env.auth.accessTokenExpiresIn,
       }
@@ -544,7 +551,7 @@ export class AuthService extends BaseService {
 
     this._logger.info("Generating refresh token");
     const refreshToken = this._tokenService.generateToken<AuthPayload>(
-      { ...payload, tokenType: TokenType.REFRESH_TOKEN },
+      { ...payload, tokenType: AuthTokenType.REFRESH_TOKEN },
       {
         expiresIn: env.auth.refreshTokenExpiresIn,
       }
@@ -556,29 +563,3 @@ export class AuthService extends BaseService {
     };
   }
 }
-
-export enum TokenType {
-  ACCESS_TOKEN = "Access Token",
-  REFRESH_TOKEN = "Refresh Token",
-  EMAIL_VERIFICATION_TOKEN = "Email Verification Token",
-  PASSWORD_RESET_TOKEN = "Password Reset Token",
-}
-
-export class TokenObject {
-  token: string;
-  expiresIn: number;
-}
-
-export class Tokens {
-  accessToken: string;
-  refreshToken: string;
-}
-
-export interface AuthPayload {
-  identityId: string;
-  email: string;
-  tokenType: TokenType;
-  signedAt?: number;
-}
-
-export type AuthResponse = User & { tokens: Tokens };

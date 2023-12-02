@@ -51,3 +51,32 @@ export class UserResponse {
     };
   }
 }
+
+export class UserSearchResponse {
+  @IsString()
+  id: string;
+
+  @IsString()
+  username: string;
+
+  @IsString()
+  firstName: string;
+
+  @IsString()
+  lastName: string;
+
+  @IsString()
+  avatar: string;
+
+  public static getUserSearchResponse(users: User[]): UserSearchResponse[] {
+    return users.map((user) => {
+      return {
+        id: user._id.toString(),
+        username: user.username,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        avatar: user.avatar,
+      };
+    });
+  }
+}

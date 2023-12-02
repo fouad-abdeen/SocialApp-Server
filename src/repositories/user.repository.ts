@@ -8,6 +8,7 @@ import {
 import { IUserRepository } from "./interfaces";
 import { User } from "../models";
 import { Model } from "mongoose";
+import { Pagination } from "../types";
 
 @Service()
 export class UserRepository extends BaseService implements IUserRepository {
@@ -72,5 +73,45 @@ export class UserRepository extends BaseService implements IUserRepository {
     if (!user) throwError(`User with email ${email} not found`, 404);
 
     return user;
+  }
+
+  async searchUsersByUsername(
+    usernameQuery: string,
+    pagination: Pagination
+  ): Promise<User[]> {
+    this._logger.info(
+      `Searching for users with username matching: ${usernameQuery}`
+    );
+
+    const currentUserId = Context.getUser()._id;
+
+    const users = await this._model
+      .find(
+        {
+          username: {
+            $regex: usernameQuery,
+            // Insensitive case search
+            $options: "i",
+          },
+          _id: {
+            // Exclude current user from search results
+            $ne: currentUserId,
+          },
+        },
+        "username firstName lastName avatar"
+      )
+      .sort({ _id: 1 })
+      .find({
+        _id: pagination.lastDocumentId
+          ? // If lastDocumentId is provided, then get the next page of results
+            { $gt: pagination.lastDocumentId }
+          : // Otherwise, get the first page of results
+            {},
+      })
+      .limit(pagination.limit)
+      .lean()
+      .exec();
+
+    return users;
   }
 }
