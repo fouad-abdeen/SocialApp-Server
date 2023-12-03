@@ -14,6 +14,8 @@ export class UserService extends BaseService {
       `Attempting to add ${followingId} to ${followerId}'s followings list`
     );
 
+    if (followerId === followingId) throwError(`Invalid follow request`, 400);
+
     // #region Add the following to the follower's followings list
     try {
       const followerQuery = <unknown>{

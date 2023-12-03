@@ -316,6 +316,92 @@
                 ]
             }
         },
+        "/users/followers": {
+            "get": {
+                "operationId": "UserController.getFollowers",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "limit",
+                        "required": true,
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "lastDocumentId",
+                        "required": false,
+                        "schema": {
+                            "pattern": "^[0-9a-fA-F]{24}$",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": {
+                                        "$ref": "#/components/schemas/UserSearchResponse"
+                                    },
+                                    "type": "array"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                },
+                "summary": "Get list of followers",
+                "tags": [
+                    "User"
+                ]
+            }
+        },
+        "/users/followings": {
+            "get": {
+                "operationId": "UserController.getFollowings",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "limit",
+                        "required": true,
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "lastDocumentId",
+                        "required": false,
+                        "schema": {
+                            "pattern": "^[0-9a-fA-F]{24}$",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": {
+                                        "$ref": "#/components/schemas/UserSearchResponse"
+                                    },
+                                    "type": "array"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                },
+                "summary": "Get list of followings",
+                "tags": [
+                    "User"
+                ]
+            }
+        },
         "/auth/signup": {
             "post": {
                 "operationId": "AuthController.signup",

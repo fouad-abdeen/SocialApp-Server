@@ -1,8 +1,7 @@
-import { index, prop } from "@typegoose/typegoose";
+import { prop } from "@typegoose/typegoose";
 import { TimeStamps } from "@typegoose/typegoose/lib/defaultClasses";
 import { AuthTokenObject } from "../types";
 
-@index({ username: "text" })
 export class User extends TimeStamps {
   public _id!: string;
 

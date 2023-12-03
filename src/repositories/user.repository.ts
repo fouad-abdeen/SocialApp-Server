@@ -114,4 +114,25 @@ export class UserRepository extends BaseService implements IUserRepository {
 
     return users;
   }
+
+  async getlistOfUsersByIds(
+    userIds: string[],
+    pagination: Pagination
+  ): Promise<User[]> {
+    this._logger.info(`Getting list of users by ids: ${userIds}`);
+
+    const users = await this._model
+      .find({ _id: { $in: userIds } })
+      .sort({ _id: 1 })
+      .find({
+        _id: pagination.lastDocumentId
+          ? { $gt: pagination.lastDocumentId }
+          : {},
+      })
+      .limit(pagination.limit)
+      .lean()
+      .exec();
+
+    return users;
+  }
 }

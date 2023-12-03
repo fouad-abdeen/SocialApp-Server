@@ -13,7 +13,6 @@ import { UserSearchResponse } from "./response";
 import { Pagination } from "../types";
 import { OpenAPI, ResponseSchema } from "routing-controllers-openapi";
 import { UserService } from "../services";
-import { isMongoId } from "class-validator";
 import { FollowingQueryParams } from "./request";
 
 @JsonController("/users")
@@ -85,6 +84,52 @@ export class UserController extends BaseService {
     );
 
     await this._userService.unfollowUser(userId, followingId);
+  }
+  // #endregion
+
+  // #region Get list of followers
+  @Authorized()
+  @Get("/followers")
+  @OpenAPI({
+    summary: "Get list of followers",
+  })
+  @ResponseSchema(UserSearchResponse, { isArray: true })
+  async getFollowers(
+    @QueryParams() pagination: Pagination
+  ): Promise<UserSearchResponse[]> {
+    const user = Context.getUser();
+
+    this._logger.info(`Getting followers for user with id: ${user._id}`);
+
+    const users = await this._userRepository.getlistOfUsersByIds(
+      user.followers,
+      pagination
+    );
+
+    return UserSearchResponse.getUserSearchResponse(users);
+  }
+  // #endregion
+
+  // #region Get list of followings
+  @Authorized()
+  @Get("/followings")
+  @OpenAPI({
+    summary: "Get list of followings",
+  })
+  @ResponseSchema(UserSearchResponse, { isArray: true })
+  async getFollowings(
+    @QueryParams() pagination: Pagination
+  ): Promise<UserSearchResponse[]> {
+    const user = Context.getUser();
+
+    this._logger.info(`Getting followings for user with id: ${user._id}`);
+
+    const users = await this._userRepository.getlistOfUsersByIds(
+      user.followings,
+      pagination
+    );
+
+    return UserSearchResponse.getUserSearchResponse(users);
   }
   // #endregion
 }
