@@ -39,7 +39,7 @@ export class MailProvider extends BaseService implements IMailProvider {
       })
       .catch((error: AxiosError) => {
         this._logger.error(error.message);
-        this._logger.error(JSON.stringify(error.response?.data));
+        this._logger.error(JSON.stringify((error.response ?? {}).data));
       });
   }
 

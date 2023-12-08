@@ -84,4 +84,12 @@ export const env = {
     ),
     brevoApiKey: getEnvVariable("BREVO_API_KEY"),
   },
+
+  awsS3: {
+    accessKeyId: getEnvVariable("AWS_S3_ACCESS_KEY_ID"),
+    secretAccessKey: getEnvVariable("AWS_S3_SECRET_ACCESS_KEY"),
+    region: getEnvVariable("AWS_S3_REGION", "global"),
+    endpoint: getEnvVariable("AWS_S3_ENDPOINT", "https://s3.tebi.io"),
+    bucket: getEnvVariable("AWS_S3_BUCKET_NAME", "social-app"),
+  },
 };

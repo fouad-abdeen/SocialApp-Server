@@ -1,11 +1,5 @@
-import { IMongoConnectionProvider } from "./mongo.interface";
-import {
-  connect,
-  Connection,
-  connection,
-  Model,
-  SchemaOptions,
-} from "mongoose";
+import { IMongodbConnectionProvider } from "./mongodb.interface";
+import { connect, Connection, connection, SchemaOptions } from "mongoose";
 import {
   AnyParamConstructor,
   ReturnModelType,
@@ -16,13 +10,14 @@ import { BaseService } from "../../../base.service";
 
 export class MongodbConnectionProvider
   extends BaseService
-  implements IMongoConnectionProvider
+  implements IMongodbConnectionProvider
 {
   private _connection: Connection;
   private _dbHost: string;
   private _dbName: string;
 
   /**
+   * Creates an instance of MongoDB Connection Provider.
    * Check out Connection String URI Format (DB_HOST):
    * https://docs.mongodb.com/manual/reference/connection-string/
    * @param dbHost Connection string URI, including MongoDB cluster/server host
@@ -60,7 +55,7 @@ export class MongodbConnectionProvider
     });
   }
 
-  async closeConnection() {
+  async closeConnection(): Promise<void> {
     await connection.close();
     this._connection = {} as Connection;
     this._logger.info("Disconnected from MongoDB");

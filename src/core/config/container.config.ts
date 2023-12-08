@@ -7,6 +7,7 @@ import {
   env,
 } from "..";
 import { AuthTokenProvider } from "../providers/auth/auth-token.provider";
+import { FileUploadProvider } from "../providers/file-upload";
 
 /**
  * Registers services in container
@@ -29,6 +30,19 @@ export const registerServices = async (logger: Logger) => {
       name: env.mail.senderName,
       email: env.mail.senderMailAddress,
     })
+  );
+
+  logger.info("Registering File Upload Service");
+  Container.set(
+    FileUploadProvider,
+    new FileUploadProvider(
+      {
+        accessKeyId: env.awsS3.accessKeyId,
+        secretAccessKey: env.awsS3.secretAccessKey,
+      },
+      env.awsS3.region,
+      env.awsS3.endpoint
+    )
   );
 
   // #region Setting MongoDB Connection

@@ -2,10 +2,9 @@ import {
   AnyParamConstructor,
   ReturnModelType,
 } from "@typegoose/typegoose/lib/types";
-import { Logger } from "../../..";
-import { Model, SchemaOptions } from "mongoose";
+import { SchemaOptions } from "mongoose";
 
-export interface IMongoConnectionProvider {
+export interface IMongodbConnectionProvider {
   /**
    * Establishes a connection to the database.
    * To use at the launch of the app.
