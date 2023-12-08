@@ -46,7 +46,7 @@ export class UserResponse {
       followings: user.followings,
       tweets: user.tweets,
       bio: user.bio,
-      avatar: user.avatar,
+      avatar: user.avatar.key,
       verified: user.verified,
     };
   }
@@ -75,8 +75,56 @@ export class UserSearchResponse {
         username: user.username,
         firstName: user.firstName,
         lastName: user.lastName,
-        avatar: user.avatar,
+        avatar: user.avatar.key,
       };
     });
   }
+}
+
+export class UserProfileResponse {
+  @IsString()
+  id: string;
+
+  @IsString()
+  username: string;
+
+  @IsString()
+  firstName: string;
+
+  @IsString()
+  lastName: string;
+
+  @IsString({ each: true })
+  followers: string[];
+
+  @IsString({ each: true })
+  followings: string[];
+
+  @IsString({ each: true })
+  tweets: string[];
+
+  @IsString()
+  bio: string;
+
+  @IsString()
+  avatar: string;
+
+  public static getUserProfileResponse(user: User): UserProfileResponse {
+    return {
+      id: user._id.toString(),
+      username: user.username,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      followers: user.followers,
+      followings: user.followings,
+      tweets: user.tweets,
+      bio: user.bio,
+      avatar: user.avatar.key,
+    };
+  }
+}
+
+export class UploadAvatarResponse {
+  @IsString()
+  fileKey: string;
 }

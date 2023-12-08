@@ -178,11 +178,28 @@ export class AuthController extends BaseService {
     summary: "Update user's password",
   })
   async updatePassword(
-    @Body() passwordUpdateRequest: PasswordUpdateRequest
+    @Body() passwordUpdateRequest: PasswordUpdateRequest,
+    @Res() response: Response
   ): Promise<void> {
     this._logger.info("Requesting password update");
 
     await this._authService.updatePassword(passwordUpdateRequest);
+
+    if (passwordUpdateRequest.terminateAllSessions) {
+      response.status(200);
+
+      response.cookie("accessToken", "", {
+        httpOnly: true,
+        secure: true,
+        expires: new Date(0),
+      });
+
+      response.cookie("refreshToken", "", {
+        httpOnly: true,
+        secure: true,
+        expires: new Date(0),
+      });
+    }
   }
   // #endregion
 

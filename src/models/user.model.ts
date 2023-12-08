@@ -1,6 +1,7 @@
 import { prop } from "@typegoose/typegoose";
 import { TimeStamps } from "@typegoose/typegoose/lib/defaultClasses";
 import { AuthTokenObject } from "../types";
+import { FileInfo } from "../core/providers/file-upload";
 
 export class User extends TimeStamps {
   public _id!: string;
@@ -37,8 +38,8 @@ export class User extends TimeStamps {
   @prop({ type: String, default: "" })
   public bio!: string;
 
-  @prop({ type: String, default: "" })
-  public avatar!: string;
+  @prop({ type: Object, default: {} })
+  public avatar!: FileInfo;
 
   @prop({ type: Boolean, default: false })
   public verified!: boolean;

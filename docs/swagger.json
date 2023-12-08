@@ -103,6 +103,69 @@
                     "avatar"
                 ]
             },
+            "UserProfileResponse": {
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "username": {
+                        "type": "string"
+                    },
+                    "firstName": {
+                        "type": "string"
+                    },
+                    "lastName": {
+                        "type": "string"
+                    },
+                    "followers": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "followings": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "tweets": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "bio": {
+                        "type": "string"
+                    },
+                    "avatar": {
+                        "type": "string"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "username",
+                    "firstName",
+                    "lastName",
+                    "followers",
+                    "followings",
+                    "tweets",
+                    "bio",
+                    "avatar"
+                ]
+            },
+            "UploadAvatarResponse": {
+                "properties": {
+                    "fileKey": {
+                        "type": "string"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "fileKey"
+                ]
+            },
             "SignupRequest": {
                 "properties": {
                     "username": {
@@ -199,6 +262,32 @@
                 "required": [
                     "followingId"
                 ]
+            },
+            "ProfileEditRequest": {
+                "properties": {
+                    "id": {
+                        "pattern": "^[0-9a-fA-F]{24}$",
+                        "type": "string"
+                    },
+                    "firstName": {
+                        "type": "string",
+                        "maxLength": 50,
+                        "minLength": 2
+                    },
+                    "lastName": {
+                        "type": "string",
+                        "maxLength": 50,
+                        "minLength": 2
+                    },
+                    "bio": {
+                        "type": "string",
+                        "maxLength": 200
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id"
+                ]
             }
         }
     },
@@ -255,6 +344,37 @@
                     }
                 },
                 "summary": "Search for users by username",
+                "tags": [
+                    "User"
+                ]
+            }
+        },
+        "/users/": {
+            "get": {
+                "operationId": "UserController.getUserByUsername",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "username",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserResponse"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                },
+                "summary": "Get user by username",
                 "tags": [
                     "User"
                 ]
@@ -399,6 +519,97 @@
                 "summary": "Get list of followings",
                 "tags": [
                     "User"
+                ]
+            }
+        },
+        "/users/avatar": {
+            "post": {
+                "operationId": "UserController.uploadAvatar",
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UploadAvatarResponse"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                },
+                "summary": "Update Avatar",
+                "tags": [
+                    "User"
+                ]
+            },
+            "delete": {
+                "operationId": "UserController.deleteAvatar",
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {}
+                        },
+                        "description": "Successful response"
+                    }
+                },
+                "summary": "Delete Avatar",
+                "tags": [
+                    "User"
+                ]
+            }
+        },
+        "/users/profile": {
+            "patch": {
+                "operationId": "UserController.updateProfile",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ProfileEditRequest"
+                            }
+                        }
+                    },
+                    "description": "ProfileEditRequest",
+                    "required": false
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {}
+                        },
+                        "description": "Successful response"
+                    }
+                },
+                "summary": "Edit Profile",
+                "tags": [
+                    "User"
+                ]
+            }
+        },
+        "/files/": {
+            "get": {
+                "operationId": "FileController.getFile",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "key",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {}
+                        },
+                        "description": "Successful response"
+                    }
+                },
+                "summary": "Get a File by Key",
+                "tags": [
+                    "File"
                 ]
             }
         },

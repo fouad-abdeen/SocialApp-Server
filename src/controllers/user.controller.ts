@@ -1,19 +1,30 @@
 import {
   Authorized,
+  Body,
+  Delete,
   Get,
   JsonController,
+  Patch,
   Post,
   QueryParam,
   QueryParams,
+  UploadedFile,
 } from "routing-controllers";
 import { Service } from "typedi";
 import { BaseService, Context, throwError } from "../core";
 import { UserRepository } from "../repositories";
-import { UserSearchResponse } from "./response";
+import {
+  UploadAvatarResponse,
+  UserProfileResponse,
+  UserResponse,
+  UserSearchResponse,
+} from "./response";
 import { Pagination } from "../types";
 import { OpenAPI, ResponseSchema } from "routing-controllers-openapi";
 import { UserService } from "../services";
-import { FollowingQueryParams } from "./request";
+import { FollowingQueryParams, ProfileEditRequest } from "./request";
+import { FileUpload } from "../core/providers/file-upload";
+import { User } from "../models";
 
 @JsonController("/users")
 @Service()
@@ -47,6 +58,27 @@ export class UserController extends BaseService {
 
     return UserSearchResponse.getUserSearchResponse(users);
   }
+  // #endregion
+
+  // #region Get user by username
+  @Authorized()
+  @Get("/")
+  @OpenAPI({
+    summary: "Get user by username",
+  })
+  @ResponseSchema(UserResponse)
+  async getUserByUsername(
+    @QueryParam("username", { required: true }) username: string
+  ): Promise<UserProfileResponse> {
+    this._logger.info(`Getting user with username: ${username}`);
+
+    const user = await this._userRepository.getUserByUsername(username);
+
+    if (!user) throwError(`User with username ${username} not found`, 404);
+
+    return UserProfileResponse.getUserProfileResponse(user);
+  }
+
   // #endregion
 
   // #region Follow user
@@ -130,6 +162,68 @@ export class UserController extends BaseService {
     );
 
     return UserSearchResponse.getUserSearchResponse(users);
+  }
+  // #endregion
+
+  // #region Update Avatar
+  @Authorized()
+  @Post("/avatar")
+  @OpenAPI({
+    summary: "Update Avatar",
+  })
+  @ResponseSchema(UploadAvatarResponse)
+  async uploadAvatar(
+    @UploadedFile("avatar", {
+      required: true,
+    })
+    avatar: FileUpload
+  ): Promise<UploadAvatarResponse> {
+    const userId = Context.getUser()._id;
+
+    this._logger.info(`Received an upload avatar request from ${userId}`);
+
+    const fileKey = await this._userService.uploadAvatar(userId, avatar);
+
+    return { fileKey };
+  }
+  // #endregion
+
+  // #region Delete Avatar
+  @Authorized()
+  @Delete("/avatar")
+  @OpenAPI({
+    summary: "Delete Avatar",
+  })
+  async deleteAvatar(): Promise<void> {
+    const user = Context.getUser();
+
+    this._logger.info(`Received a delete avatar request from ${user._id}`);
+
+    await this._userService.deleteAvatar(user);
+  }
+  // #endregion
+
+  // #region Edit Profile
+  @Authorized()
+  @Patch("/profile")
+  @OpenAPI({
+    summary: "Edit Profile",
+  })
+  async updateProfile(
+    @Body() data: ProfileEditRequest
+  ): Promise<UserProfileResponse> {
+    const { _id } = Context.getUser();
+
+    this._logger.info(`Received an edit profile request from ${_id}`);
+
+    const query = <unknown>{
+      _id,
+      ...data,
+    };
+
+    const updatedUser = await this._userRepository.updateUser(<User>query);
+
+    return UserProfileResponse.getUserProfileResponse(updatedUser);
   }
   // #endregion
 }
