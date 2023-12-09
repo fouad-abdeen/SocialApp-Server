@@ -78,6 +78,21 @@ export class FileUploadProvider
     }
   }
 
+  async getObject(key: string, bucket: string): Promise<unknown> {
+    const params = { Key: key, Bucket: bucket };
+
+    try {
+      const command = new GetObjectCommand(params);
+
+      const object = await this.instance.send(command);
+
+      return object;
+    } catch (error: any) {
+      this._logger.error(`AWS error found. Error details: `, error.message);
+      throw new Error(error.message);
+    }
+  }
+
   async getSignedURL(
     key: string,
     bucket: string,

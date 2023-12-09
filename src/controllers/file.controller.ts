@@ -17,11 +17,11 @@ export class FileController extends BaseService {
     super(__filename);
   }
 
-  // #region Get file by key
+  // #region Get File
   @Authorized()
   @Get("/")
   @OpenAPI({
-    summary: "Get a File by Key",
+    summary: "Get a file by key",
   })
   async getFile(
     @QueryParam("key", { required: true }) fileKey: string,
@@ -29,13 +29,17 @@ export class FileController extends BaseService {
   ): Promise<void> {
     let url = "";
 
+    this.setRequestId();
     this._logger.info(`Attempting to get file with key: ${fileKey}`);
 
     try {
+      // Make sure that the file exists before getting the signed URL
+      await this._fileService.getObject(fileKey, env.awsS3.bucket);
+
       url = await this._fileService.getSignedURL(fileKey, env.awsS3.bucket, 60);
     } catch (error: any) {
       this._logger.error(error.message);
-      throwError(`Failed to get file`, 400);
+      throwError(`Failed to get file. ${error.message}`, 400);
     }
 
     response.redirect(url);

@@ -1,11 +1,11 @@
 import { NextFunction, Request, Response } from "express";
 import morgan from "morgan";
 import { ExpressMiddlewareInterface, Middleware } from "routing-controllers";
-import { v4 as uuid } from "uuid";
 import { Context } from "..";
 import { env } from "..";
 import { Service } from "typedi";
 import { Logger } from "..";
+import { nanoid } from "nanoid";
 
 /**
  * Creates a unique request id and sets the context
@@ -28,7 +28,7 @@ export class ContextMiddleware implements ExpressMiddlewareInterface {
       requestId = <string>req.headers["request-id"];
     } else {
       // Create a new request id and set the header
-      requestId = uuid();
+      requestId = nanoid();
       req.headers["requestId"] = requestId;
     }
 

@@ -1,4 +1,4 @@
-import { Service } from "typedi";
+import Container, { Service } from "typedi";
 import {
   BaseService,
   env,
@@ -17,9 +17,12 @@ export class UserService extends BaseService {
     private _fileService: FileUploadProvider
   ) {
     super(__filename);
+    if (!this._fileService)
+      this._fileService = Container.get(FileUploadProvider);
   }
 
   async followUser(followerId: string, followingId: string): Promise<void> {
+    this.setRequestId();
     this._logger.info(
       `Attempting to add ${followingId} to ${followerId}'s followings list`
     );
@@ -73,6 +76,7 @@ export class UserService extends BaseService {
   }
 
   async unfollowUser(followerId: string, followingId: string): Promise<void> {
+    this.setRequestId();
     this._logger.info(
       `Attempting to remove ${followingId} from ${followerId}'s followings list`
     );
@@ -123,6 +127,7 @@ export class UserService extends BaseService {
   }
 
   async uploadAvatar(userId: string, avatar: FileUpload): Promise<string> {
+    this.setRequestId();
     this._logger.info(`Attempting to upload ${userId}'s avatar`);
 
     const { originalname, buffer, size } = avatar;
@@ -148,7 +153,7 @@ export class UserService extends BaseService {
 
     const query = <unknown>{
       _id: userId,
-      avatar: fileInfo,
+      avatar: fileInfo.key,
     };
 
     await this._userRepository.updateUser(<User>query);
@@ -159,20 +164,21 @@ export class UserService extends BaseService {
   async deleteAvatar(user: User): Promise<void> {
     const { _id } = user;
 
+    this.setRequestId();
     this._logger.info(`Attempting to delete ${_id}'s avatar`);
 
-    if (!(user.avatar ?? {}).key) return;
+    if (!user.avatar.includes(`avatars/avatar-${_id}`)) return;
 
     try {
-      await this._fileService.deleteFile(user.avatar.key, env.awsS3.bucket);
-    } catch (error: unknown) {
-      this._logger.error(`Error deleting ${_id}'s avatar`);
-      throwError(`Failed to delete your avatar`, 400);
+      await this._fileService.deleteFile(user.avatar, env.awsS3.bucket);
+    } catch (error: any) {
+      this._logger.error(error.message);
+      throwError(`Failed to delete your avatar. ${error.message}`, 400);
     }
 
     const query = <unknown>{
       _id,
-      avatar: {},
+      avatar: "",
     };
 
     await this._userRepository.updateUser(<User>query);

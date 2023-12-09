@@ -47,6 +47,7 @@ export class UserController extends BaseService {
     @QueryParam("usernameQuery", { required: true }) usernameQuery: string,
     @QueryParams() pagination: Pagination
   ): Promise<UserSearchResponse[]> {
+    this.setRequestId();
     this._logger.info(
       `Searching for users with username matching: ${usernameQuery}`
     );
@@ -70,6 +71,7 @@ export class UserController extends BaseService {
   async getUserByUsername(
     @QueryParam("username", { required: true }) username: string
   ): Promise<UserProfileResponse> {
+    this.setRequestId();
     this._logger.info(`Getting user with username: ${username}`);
 
     const user = await this._userRepository.getUserByUsername(username);
@@ -92,6 +94,7 @@ export class UserController extends BaseService {
   ): Promise<void> {
     const userId = Context.getUser()._id;
 
+    this.setRequestId();
     this._logger.info(
       `Received a follow request from ${userId} to ${followingId}`
     );
@@ -111,6 +114,7 @@ export class UserController extends BaseService {
   ): Promise<void> {
     const userId = Context.getUser()._id;
 
+    this.setRequestId();
     this._logger.info(
       `Received an unfollow request from ${userId} to ${followingId}`
     );
@@ -131,6 +135,7 @@ export class UserController extends BaseService {
   ): Promise<UserSearchResponse[]> {
     const user = Context.getUser();
 
+    this.setRequestId();
     this._logger.info(`Getting followers for user with id: ${user._id}`);
 
     const users = await this._userRepository.getlistOfUsersByIds(
@@ -154,6 +159,7 @@ export class UserController extends BaseService {
   ): Promise<UserSearchResponse[]> {
     const user = Context.getUser();
 
+    this.setRequestId();
     this._logger.info(`Getting followings for user with id: ${user._id}`);
 
     const users = await this._userRepository.getlistOfUsersByIds(
@@ -165,11 +171,11 @@ export class UserController extends BaseService {
   }
   // #endregion
 
-  // #region Update Avatar
+  // #region Update avatar
   @Authorized()
   @Post("/avatar")
   @OpenAPI({
-    summary: "Update Avatar",
+    summary: "Update avatar",
   })
   @ResponseSchema(UploadAvatarResponse)
   async uploadAvatar(
@@ -180,6 +186,7 @@ export class UserController extends BaseService {
   ): Promise<UploadAvatarResponse> {
     const userId = Context.getUser()._id;
 
+    this.setRequestId();
     this._logger.info(`Received an upload avatar request from ${userId}`);
 
     const fileKey = await this._userService.uploadAvatar(userId, avatar);
@@ -188,32 +195,34 @@ export class UserController extends BaseService {
   }
   // #endregion
 
-  // #region Delete Avatar
+  // #region Delete avatar
   @Authorized()
   @Delete("/avatar")
   @OpenAPI({
-    summary: "Delete Avatar",
+    summary: "Delete avatar",
   })
   async deleteAvatar(): Promise<void> {
     const user = Context.getUser();
 
+    this.setRequestId();
     this._logger.info(`Received a delete avatar request from ${user._id}`);
 
     await this._userService.deleteAvatar(user);
   }
   // #endregion
 
-  // #region Edit Profile
+  // #region Edit profile
   @Authorized()
   @Patch("/profile")
   @OpenAPI({
-    summary: "Edit Profile",
+    summary: "Edit profile",
   })
   async updateProfile(
     @Body() data: ProfileEditRequest
   ): Promise<UserProfileResponse> {
     const { _id } = Context.getUser();
 
+    this.setRequestId();
     this._logger.info(`Received an edit profile request from ${_id}`);
 
     const query = <unknown>{

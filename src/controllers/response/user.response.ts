@@ -24,7 +24,7 @@ export class UserResponse {
   followings: string[];
 
   @IsString({ each: true })
-  tweets: string[];
+  posts: string[];
 
   @IsString()
   bio: string;
@@ -44,9 +44,9 @@ export class UserResponse {
       lastName: user.lastName,
       followers: user.followers,
       followings: user.followings,
-      tweets: user.tweets,
+      posts: user.posts,
       bio: user.bio,
-      avatar: user.avatar.key,
+      avatar: user.avatar,
       verified: user.verified,
     };
   }
@@ -75,7 +75,7 @@ export class UserSearchResponse {
         username: user.username,
         firstName: user.firstName,
         lastName: user.lastName,
-        avatar: user.avatar.key,
+        avatar: user.avatar,
       };
     });
   }
@@ -101,7 +101,7 @@ export class UserProfileResponse {
   followings: string[];
 
   @IsString({ each: true })
-  tweets: string[];
+  posts: string[];
 
   @IsString()
   bio: string;
@@ -117,9 +117,9 @@ export class UserProfileResponse {
       lastName: user.lastName,
       followers: user.followers,
       followings: user.followings,
-      tweets: user.tweets,
+      posts: user.posts,
       bio: user.bio,
-      avatar: user.avatar.key,
+      avatar: user.avatar,
     };
   }
 }

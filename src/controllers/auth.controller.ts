@@ -20,7 +20,7 @@ import {
   SignupRequest,
 } from "./request";
 import { UserResponse } from "./response";
-import { Request, Response, response } from "express";
+import { Request, Response } from "express";
 
 @JsonController("/auth")
 @Service()
@@ -39,6 +39,7 @@ export class AuthController extends BaseService {
     @Body({ required: true }) signupRequest: SignupRequest,
     @Res() response: Response
   ): Promise<UserResponse> {
+    this.setRequestId();
     this._logger.info(
       `Requesting signup for user with username ${signupRequest.username}`
     );
@@ -72,6 +73,7 @@ export class AuthController extends BaseService {
     @Body({ required: true }) loginRequest: LoginRequest,
     @Res() response: Response
   ): Promise<UserResponse> {
+    this.setRequestId();
     this._logger.info(
       `Requesting login for user with the identifier ${loginRequest.userIdentifier}`
     );
@@ -106,6 +108,7 @@ export class AuthController extends BaseService {
     @Req() request: Request,
     @Res() response: Response
   ): Promise<void> {
+    this.setRequestId();
     this._logger.info("Requesting user logout");
 
     const accessToken = <string>request.cookies["accessToken"],
@@ -135,6 +138,7 @@ export class AuthController extends BaseService {
     summary: "Verify email address",
   })
   async verifyEmail(@QueryParam("token") token: string): Promise<void> {
+    this.setRequestId();
     this._logger.info("Requesting email address verification");
 
     await this._authService.verifyEmailAddress(token);
@@ -149,6 +153,7 @@ export class AuthController extends BaseService {
   async requestPasswordReset(
     @QueryParam("email") email: string
   ): Promise<void> {
+    this.setRequestId();
     this._logger.info(
       `Requesting password reset token for user with email ${email}`
     );
@@ -165,6 +170,7 @@ export class AuthController extends BaseService {
   async resetPassword(
     @Body() { token, password }: PasswordResetRequest
   ): Promise<void> {
+    this.setRequestId();
     this._logger.info("Requesting password reset");
 
     await this._authService.resetPassword(token, password);
@@ -181,6 +187,7 @@ export class AuthController extends BaseService {
     @Body() passwordUpdateRequest: PasswordUpdateRequest,
     @Res() response: Response
   ): Promise<void> {
+    this.setRequestId();
     this._logger.info("Requesting password update");
 
     await this._authService.updatePassword(passwordUpdateRequest);
@@ -213,6 +220,7 @@ export class AuthController extends BaseService {
   async getAuthenticatedUser(): Promise<UserResponse> {
     const user = Context.getUser();
 
+    this.setRequestId();
     this._logger.info(
       `Received a request to get info of the user with id: ${user._id}`
     );

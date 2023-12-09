@@ -27,6 +27,14 @@ export interface IFileUploadProvider {
   deleteFile(key: string, bucket: string): Promise<void>;
 
   /**
+   * Gets an object from AWS S3.
+   * @param key File key (storage path + name + extension)
+   * @param bucket S3 bucket name
+   * @returns File object
+   */
+  getObject(key: string, bucket: string): Promise<unknown>;
+
+  /**
    * Generates a signed URL for a file in AWS S3.
    * @param key File key (storage path + name + extension)
    * @param bucket S3 bucket name

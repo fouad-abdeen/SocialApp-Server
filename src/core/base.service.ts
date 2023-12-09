@@ -1,4 +1,4 @@
-import { Logger } from ".";
+import { Context, Logger } from ".";
 
 /**
  * Base Service Class.
@@ -9,5 +9,9 @@ export abstract class BaseService {
 
   constructor(filename: string, logger?: Logger) {
     this._logger = logger ?? new Logger(filename);
+  }
+
+  setRequestId(): void {
+    this._logger.setRequestId(Context.getRequestId());
   }
 }

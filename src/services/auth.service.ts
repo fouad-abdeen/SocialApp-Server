@@ -42,6 +42,7 @@ export class AuthService extends BaseService {
   }
 
   async signUpUser(userSignupData: SignupRequest): Promise<AuthResponse> {
+    this.setRequestId();
     this._logger.info(
       `Attempting to sign up user with username ${userSignupData.username}`
     );
@@ -124,6 +125,7 @@ export class AuthService extends BaseService {
   }
 
   async signOutUser(tokens: AuthTokens): Promise<void> {
+    this.setRequestId();
     this._logger.info(
       `Attempting to sign out user by invalidating their tokens`
     );
@@ -190,6 +192,7 @@ export class AuthService extends BaseService {
       ? "email " + userIdentifier
       : "username " + userIdentifier;
 
+    this.setRequestId();
     this._logger.info(
       `Attempting to authenticate user with ${userIdentifierMessage}`
     );
@@ -240,7 +243,8 @@ export class AuthService extends BaseService {
     let user: User;
     const accessToken = action.request.cookies["accessToken"];
 
-    this._logger.info(`Attempting to authorize user with token ${accessToken}`);
+    this.setRequestId();
+    this._logger.info("Attempting to authorize user");
 
     // #region Verify Authorization Access Token
     this._logger.info("Verifying authorization access token");
@@ -341,6 +345,9 @@ export class AuthService extends BaseService {
       tokenExpiry = 0,
       tokensDenylist: AuthTokenObject[] = [];
 
+    this.setRequestId();
+    this._logger.info("Attempting to verify email address");
+
     // #region Verify Token
     try {
       const authPayload = this._tokenService.verifyToken<
@@ -383,6 +390,9 @@ export class AuthService extends BaseService {
   }
 
   async sendPasswordResetLink(email: string): Promise<void> {
+    this.setRequestId();
+    this._logger.info(`Attempting to send password reset link to ${email}`);
+
     this._logger.info(`Verifying user's email ${email}`);
     const user = await this._userRepository.getUserByEmail(email);
 
@@ -421,6 +431,9 @@ export class AuthService extends BaseService {
       verified = false,
       tokenExpiry = 0,
       tokensDenylist: AuthTokenObject[] = [];
+
+    this.setRequestId();
+    this._logger.info("Attempting to reset password");
 
     // #region Verify Token
     try {
@@ -473,6 +486,11 @@ export class AuthService extends BaseService {
   async updatePassword(request: PasswordUpdateRequest): Promise<void> {
     const user = Context.getUser();
 
+    this.setRequestId();
+    this._logger.info(
+      `Attempting to update password for user with id ${user._id}`
+    );
+
     const passwordMatch = await this._hashService.verifyPassword(
       request.currentPassword,
       user.password
@@ -499,6 +517,7 @@ export class AuthService extends BaseService {
       email = "",
       tokenExpiry = 0;
 
+    this.setRequestId();
     this._logger.info("Verifying refresh token");
 
     try {
@@ -541,6 +560,8 @@ export class AuthService extends BaseService {
   }
 
   private getTokens(payload: AuthPayload): AuthTokens {
+    this.setRequestId();
+
     this._logger.info("Generating access token");
     const accessToken = this._tokenService.generateToken<AuthPayload>(
       { ...payload, tokenType: AuthTokenType.ACCESS_TOKEN },
