@@ -11,7 +11,7 @@ import {
   UploadedFile,
 } from "routing-controllers";
 import { Service } from "typedi";
-import { BaseService, Context, throwError } from "../core";
+import { BaseService, Context, FileUpload, throwError } from "../core";
 import { UserRepository } from "../repositories";
 import {
   UploadAvatarResponse,
@@ -23,7 +23,6 @@ import { Pagination } from "../types";
 import { OpenAPI, ResponseSchema } from "routing-controllers-openapi";
 import { UserService } from "../services";
 import { FollowingQueryParams, ProfileEditRequest } from "./request";
-import { FileUpload } from "../core/providers/file-upload";
 import { User } from "../models";
 
 @JsonController("/users")

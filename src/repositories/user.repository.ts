@@ -28,14 +28,10 @@ export class UserRepository extends BaseService implements IUserRepository {
   }
 
   async createUser(user: User): Promise<User> {
+    this.setRequestId();
     this._logger.info(`Creating user with username: ${user.username}`);
 
-    const createdUser = (
-      await this._model.create({
-        ...user,
-        passwordUpdatedAt: +new Date(),
-      })
-    ).toObject();
+    const createdUser = (await this._model.create(user)).toObject();
 
     return createdUser;
   }
@@ -43,6 +39,7 @@ export class UserRepository extends BaseService implements IUserRepository {
   async updateUser(user: User): Promise<User> {
     const { _id, ...data } = user;
 
+    this.setRequestId();
     this._logger.info(`Updating user with id: ${_id}`);
 
     const updatedUser = await this._model.findByIdAndUpdate(_id, data);
@@ -52,7 +49,19 @@ export class UserRepository extends BaseService implements IUserRepository {
     return <User>updatedUser;
   }
 
+  async getUserByEmail(email: string): Promise<User> {
+    this.setRequestId();
+    this._logger.info(`Getting user by email: ${email}`);
+
+    const user = (await this._model.findOne({ email }).lean().exec()) as User;
+
+    if (!user) throwError(`User with email ${email} not found`, 404);
+
+    return user;
+  }
+
   async getUserByUsername(username: string): Promise<User> {
+    this.setRequestId();
     this._logger.info(`Getting user by username: ${username}`);
 
     const user = (await this._model
@@ -65,49 +74,33 @@ export class UserRepository extends BaseService implements IUserRepository {
     return user;
   }
 
-  async getUserByEmail(email: string): Promise<User> {
-    this._logger.info(`Getting user by email: ${email}`);
-
-    const user = (await this._model.findOne({ email }).lean().exec()) as User;
-
-    if (!user) throwError(`User with email ${email} not found`, 404);
-
-    return user;
-  }
-
   async searchUsersByUsername(
     usernameQuery: string,
     pagination: Pagination
   ): Promise<User[]> {
+    this.setRequestId();
     this._logger.info(
       `Searching for users with username matching: ${usernameQuery}`
     );
 
-    const currentUserId = Context.getUser()._id;
+    const query = {
+      username: {
+        $regex: usernameQuery,
+        $options: "i",
+      },
+      _id: {
+        // Exclude current user from search results
+        $ne: Context.getUser()._id,
+      },
+      // Add an additional condition for pagination based on lastDocumentId
+      ...(pagination.lastDocumentId
+        ? { _id: { $gt: pagination.lastDocumentId } }
+        : {}),
+    };
 
     const users = await this._model
-      .find(
-        {
-          username: {
-            $regex: usernameQuery,
-            // Insensitive case search
-            $options: "i",
-          },
-          _id: {
-            // Exclude current user from search results
-            $ne: currentUserId,
-          },
-        },
-        "username firstName lastName avatar"
-      )
+      .find(query, "username firstName lastName avatar")
       .sort({ _id: 1 })
-      .find({
-        _id: pagination.lastDocumentId
-          ? // If lastDocumentId is provided, then get the next page of results
-            { $gt: pagination.lastDocumentId }
-          : // Otherwise, get the first page of results
-            {},
-      })
       .limit(pagination.limit)
       .lean()
       .exec();
@@ -119,16 +112,17 @@ export class UserRepository extends BaseService implements IUserRepository {
     userIds: string[],
     pagination: Pagination
   ): Promise<User[]> {
+    this.setRequestId();
     this._logger.info(`Getting list of users by ids: ${userIds}`);
 
     const users = await this._model
       .find({ _id: { $in: userIds } })
       .sort({ _id: 1 })
-      .find({
-        _id: pagination.lastDocumentId
-          ? { $gt: pagination.lastDocumentId }
-          : {},
-      })
+      .find(
+        pagination.lastDocumentId
+          ? { _id: { $gt: pagination.lastDocumentId } }
+          : {}
+      )
       .limit(pagination.limit)
       .lean()
       .exec();

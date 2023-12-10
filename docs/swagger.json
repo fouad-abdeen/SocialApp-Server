@@ -45,7 +45,7 @@
                         },
                         "type": "array"
                     },
-                    "tweets": {
+                    "posts": {
                         "items": {
                             "type": "string"
                         },
@@ -70,7 +70,7 @@
                     "lastName",
                     "followers",
                     "followings",
-                    "tweets",
+                    "posts",
                     "bio",
                     "avatar",
                     "verified"
@@ -129,7 +129,7 @@
                         },
                         "type": "array"
                     },
-                    "tweets": {
+                    "posts": {
                         "items": {
                             "type": "string"
                         },
@@ -150,7 +150,7 @@
                     "lastName",
                     "followers",
                     "followings",
-                    "tweets",
+                    "posts",
                     "bio",
                     "avatar"
                 ]
@@ -164,6 +164,136 @@
                 "type": "object",
                 "required": [
                     "fileKey"
+                ]
+            },
+            "PostResponse": {
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "user": {
+                        "type": "string"
+                    },
+                    "content": {
+                        "type": "string"
+                    },
+                    "likes": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "comments": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "image": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "oneOf": [
+                            {
+                                "format": "date",
+                                "type": "string"
+                            },
+                            {
+                                "format": "date-time",
+                                "type": "string"
+                            }
+                        ]
+                    },
+                    "updatedAt": {
+                        "oneOf": [
+                            {
+                                "format": "date",
+                                "type": "string"
+                            },
+                            {
+                                "format": "date-time",
+                                "type": "string"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "user",
+                    "content",
+                    "likes",
+                    "comments",
+                    "image",
+                    "createdAt",
+                    "updatedAt"
+                ]
+            },
+            "CommentResponse": {
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "user": {
+                        "type": "string"
+                    },
+                    "post": {
+                        "type": "string"
+                    },
+                    "content": {
+                        "type": "string"
+                    },
+                    "likes": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "replies": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "replyTo": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "oneOf": [
+                            {
+                                "format": "date",
+                                "type": "string"
+                            },
+                            {
+                                "format": "date-time",
+                                "type": "string"
+                            }
+                        ]
+                    },
+                    "updatedAt": {
+                        "oneOf": [
+                            {
+                                "format": "date",
+                                "type": "string"
+                            },
+                            {
+                                "format": "date-time",
+                                "type": "string"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "user",
+                    "post",
+                    "content",
+                    "likes",
+                    "replies",
+                    "replyTo",
+                    "createdAt",
+                    "updatedAt"
                 ]
             },
             "SignupRequest": {
@@ -287,6 +417,32 @@
                 "type": "object",
                 "required": [
                     "id"
+                ]
+            },
+            "SubmitPostRequest": {
+                "properties": {
+                    "content": {
+                        "type": "string",
+                        "maxLength": 3000,
+                        "minLength": 15
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "content"
+                ]
+            },
+            "CommentOnPostRequest": {
+                "properties": {
+                    "content": {
+                        "type": "string",
+                        "maxLength": 1000,
+                        "minLength": 5
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "content"
                 ]
             }
         }
@@ -537,7 +693,7 @@
                         "description": ""
                     }
                 },
-                "summary": "Update Avatar",
+                "summary": "Update avatar",
                 "tags": [
                     "User"
                 ]
@@ -552,7 +708,7 @@
                         "description": "Successful response"
                     }
                 },
-                "summary": "Delete Avatar",
+                "summary": "Delete avatar",
                 "tags": [
                     "User"
                 ]
@@ -580,9 +736,270 @@
                         "description": "Successful response"
                     }
                 },
-                "summary": "Edit Profile",
+                "summary": "Edit profile",
                 "tags": [
                     "User"
+                ]
+            }
+        },
+        "/posts/": {
+            "post": {
+                "operationId": "PostController.submitPost",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SubmitPostRequest"
+                            }
+                        }
+                    },
+                    "description": "SubmitPostRequest",
+                    "required": false
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PostResponse"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                },
+                "summary": "Submit a post",
+                "tags": [
+                    "Post"
+                ]
+            },
+            "get": {
+                "operationId": "PostController.getTimelinePosts",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "limit",
+                        "required": true,
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "lastDocumentId",
+                        "required": false,
+                        "schema": {
+                            "pattern": "^[0-9a-fA-F]{24}$",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": {
+                                        "$ref": "#/components/schemas/PostResponse"
+                                    },
+                                    "type": "array"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                },
+                "summary": "Get timeline posts",
+                "tags": [
+                    "Post"
+                ]
+            }
+        },
+        "/posts/{postId}": {
+            "patch": {
+                "operationId": "PostController.updatePost",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "postId",
+                        "required": true,
+                        "schema": {
+                            "pattern": "[^\\/#\\?]+?",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SubmitPostRequest"
+                            }
+                        }
+                    },
+                    "description": "SubmitPostRequest",
+                    "required": false
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {}
+                        },
+                        "description": "Successful response"
+                    }
+                },
+                "summary": "Update a post",
+                "tags": [
+                    "Post"
+                ]
+            },
+            "delete": {
+                "operationId": "PostController.deletePost",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "postId",
+                        "required": true,
+                        "schema": {
+                            "pattern": "[^\\/#\\?]+?",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {}
+                        },
+                        "description": "Successful response"
+                    }
+                },
+                "summary": "Delete a post",
+                "tags": [
+                    "Post"
+                ]
+            }
+        },
+        "/posts/{postId}/like": {
+            "post": {
+                "operationId": "PostController.likePost",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "postId",
+                        "required": true,
+                        "schema": {
+                            "pattern": "[^\\/#\\?]+?",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {}
+                        },
+                        "description": "Successful response"
+                    }
+                },
+                "summary": "Like a post",
+                "tags": [
+                    "Post"
+                ]
+            }
+        },
+        "/posts/{postId}/comment": {
+            "post": {
+                "operationId": "PostController.commentOnPost",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "postId",
+                        "required": true,
+                        "schema": {
+                            "pattern": "[^\\/#\\?]+?",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CommentOnPostRequest"
+                            }
+                        }
+                    },
+                    "description": "CommentOnPostRequest",
+                    "required": false
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CommentResponse"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                },
+                "summary": "Comment on a post",
+                "tags": [
+                    "Post"
+                ]
+            }
+        },
+        "/posts/{userId}": {
+            "get": {
+                "operationId": "PostController.getUserPosts",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "userId",
+                        "required": true,
+                        "schema": {
+                            "pattern": "[^\\/#\\?]+?",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "limit",
+                        "required": true,
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "lastDocumentId",
+                        "required": false,
+                        "schema": {
+                            "pattern": "^[0-9a-fA-F]{24}$",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": {
+                                        "$ref": "#/components/schemas/PostResponse"
+                                    },
+                                    "type": "array"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                },
+                "summary": "Get user posts",
+                "tags": [
+                    "Post"
                 ]
             }
         },
@@ -607,9 +1024,252 @@
                         "description": "Successful response"
                     }
                 },
-                "summary": "Get a File by Key",
+                "summary": "Get a file by key",
                 "tags": [
                     "File"
+                ]
+            }
+        },
+        "/comments/{commentId}": {
+            "patch": {
+                "operationId": "CommentController.updateComment",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "commentId",
+                        "required": true,
+                        "schema": {
+                            "pattern": "[^\\/#\\?]+?",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CommentOnPostRequest"
+                            }
+                        }
+                    },
+                    "description": "CommentOnPostRequest",
+                    "required": false
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CommentResponse"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                },
+                "summary": "Update a comment",
+                "tags": [
+                    "Comment"
+                ]
+            },
+            "delete": {
+                "operationId": "CommentController.deleteComment",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "commentId",
+                        "required": true,
+                        "schema": {
+                            "pattern": "[^\\/#\\?]+?",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {}
+                        },
+                        "description": "Successful response"
+                    }
+                },
+                "summary": "Delete a comment",
+                "tags": [
+                    "Comment"
+                ]
+            }
+        },
+        "/comments/{commentId}/like": {
+            "post": {
+                "operationId": "CommentController.likeComment",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "commentId",
+                        "required": true,
+                        "schema": {
+                            "pattern": "[^\\/#\\?]+?",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {}
+                        },
+                        "description": "Successful response"
+                    }
+                },
+                "summary": "Like a comment",
+                "tags": [
+                    "Comment"
+                ]
+            }
+        },
+        "/comments/{commentId}/reply": {
+            "post": {
+                "operationId": "CommentController.replyToComment",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "commentId",
+                        "required": true,
+                        "schema": {
+                            "pattern": "[^\\/#\\?]+?",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CommentOnPostRequest"
+                            }
+                        }
+                    },
+                    "description": "CommentOnPostRequest",
+                    "required": false
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CommentResponse"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                },
+                "summary": "Reply to a comment",
+                "tags": [
+                    "Comment"
+                ]
+            }
+        },
+        "/comments/": {
+            "get": {
+                "operationId": "CommentController.getPostComments",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "postId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "limit",
+                        "required": true,
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "lastDocumentId",
+                        "required": false,
+                        "schema": {
+                            "pattern": "^[0-9a-fA-F]{24}$",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": {
+                                        "$ref": "#/components/schemas/CommentResponse"
+                                    },
+                                    "type": "array"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                },
+                "summary": "Get comments of a post",
+                "tags": [
+                    "Comment"
+                ]
+            }
+        },
+        "/comments/{commentId}/replies": {
+            "get": {
+                "operationId": "CommentController.getCommentReplies",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "commentId",
+                        "required": true,
+                        "schema": {
+                            "pattern": "[^\\/#\\?]+?",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "limit",
+                        "required": true,
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "lastDocumentId",
+                        "required": false,
+                        "schema": {
+                            "pattern": "^[0-9a-fA-F]{24}$",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": {
+                                        "$ref": "#/components/schemas/CommentResponse"
+                                    },
+                                    "type": "array"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                },
+                "summary": "Get replies of a comment",
+                "tags": [
+                    "Comment"
                 ]
             }
         },

@@ -1,0 +1,181 @@
+import {
+  Authorized,
+  Body,
+  Delete,
+  Get,
+  JsonController,
+  Param,
+  Patch,
+  Post,
+  QueryParam,
+  QueryParams,
+} from "routing-controllers";
+import { OpenAPI, ResponseSchema } from "routing-controllers-openapi";
+import { Service } from "typedi";
+import { BaseService, Context, throwError } from "../core";
+import { CommentResponse } from "./response";
+import { CommentService } from "../services";
+import { CommentOnPostRequest } from "./request";
+import { CommentRepository } from "../repositories";
+import { Comment } from "../models";
+import { Pagination } from "../types";
+import { isMongoId } from "class-validator";
+
+@JsonController("/comments")
+@Service()
+export class CommentController extends BaseService {
+  constructor(
+    private _commentService: CommentService,
+    private _commentRepository: CommentRepository
+  ) {
+    super(__filename);
+  }
+
+  // #region Update a comment
+  @Authorized()
+  @Patch("/:commentId")
+  @OpenAPI({
+    summary: "Update a comment",
+  })
+  @ResponseSchema(CommentResponse)
+  async updateComment(
+    @Param("commentId") commentId: string,
+    @Body() { content }: CommentOnPostRequest
+  ): Promise<CommentResponse> {
+    this.setRequestId();
+    this._logger.info(`Received a request to update the comment: ${commentId}`);
+
+    if (!isMongoId(commentId))
+      throwError(`Invalid comment id: ${commentId}`, 400);
+
+    const updatedComment = await this._commentService.updateComment(
+      commentId,
+      content
+    );
+
+    return CommentResponse.getCommentResponse(updatedComment);
+  }
+  // #endregion
+
+  // #region Delete a comment
+  @Authorized()
+  @Delete("/:commentId")
+  @OpenAPI({
+    summary: "Delete a comment",
+  })
+  async deleteComment(@Param("commentId") commentId: string): Promise<void> {
+    this.setRequestId();
+    this._logger.info(`Received a request to delete the comment: ${commentId}`);
+
+    if (!isMongoId(commentId))
+      throwError(`Invalid comment id: ${commentId}`, 400);
+
+    await this._commentService.deleteComment(commentId);
+  }
+  // #endregion
+
+  // #region Like a comment
+  @Authorized()
+  @Post("/:commentId/like")
+  @OpenAPI({
+    summary: "Like a comment",
+  })
+  async likeComment(@Param("commentId") commentId: string): Promise<void> {
+    const userId = Context.getUser()._id;
+
+    this.setRequestId();
+    this._logger.info(`Received a request to like the comment: ${commentId}`);
+
+    if (!isMongoId(commentId))
+      throwError(`Invalid comment id: ${commentId}`, 400);
+
+    const query = <unknown>{
+      _id: commentId,
+      $addToSet: { likes: userId },
+    };
+
+    await this._commentRepository.updateComment(<Comment>query);
+  }
+  // #endregion
+
+  // #region Reply to a comment
+  @Authorized()
+  @Post("/:commentId/reply")
+  @OpenAPI({
+    summary: "Reply to a comment",
+  })
+  @ResponseSchema(CommentResponse)
+  async replyToComment(
+    @Param("commentId") commentId: string,
+    @Body() { content }: CommentOnPostRequest
+  ): Promise<CommentResponse> {
+    const userId = Context.getUser()._id;
+
+    this.setRequestId();
+    this._logger.info(`Received a reply request to the comment: ${commentId}`);
+
+    if (!isMongoId(commentId))
+      throwError(`Invalid comment id: ${commentId}`, 400);
+
+    const reply = await this._commentService.replyToComment(commentId, content);
+
+    return CommentResponse.getCommentResponse(reply);
+  }
+  // #endregion
+
+  // #region Get comments of a post
+  @Authorized()
+  @Get("/")
+  @OpenAPI({
+    summary: "Get comments of a post",
+  })
+  @ResponseSchema(CommentResponse, { isArray: true })
+  async getPostComments(
+    @QueryParams() pagination: Pagination,
+    @QueryParam("postId", { required: true }) postId: string
+  ): Promise<CommentResponse[]> {
+    this.setRequestId();
+    this._logger.info(
+      `Received a request to get comments of the post: ${postId}`
+    );
+
+    if (!isMongoId(postId)) throwError(`Invalid post id: ${postId}`, 400);
+
+    const comments = await this._commentRepository.getPostComments(
+      pagination,
+      postId
+    );
+
+    return CommentResponse.getCommentsListResponse(comments);
+  }
+
+  // #endregion
+
+  // #region Get replies of a comment
+  @Authorized()
+  @Get("/:commentId/replies")
+  @OpenAPI({
+    summary: "Get replies of a comment",
+  })
+  @ResponseSchema(CommentResponse, { isArray: true })
+  async getCommentReplies(
+    @QueryParams() pagination: Pagination,
+    @Param("commentId") commentId: string
+  ): Promise<CommentResponse[]> {
+    this.setRequestId();
+    this._logger.info(
+      `Received a request to get replies of the comment: ${commentId}`
+    );
+
+    if (!isMongoId(commentId))
+      throwError(`Invalid comment id: ${commentId}`, 400);
+
+    const replies = await this._commentRepository.getCommentReplies(
+      pagination,
+      commentId
+    );
+
+    return CommentResponse.getCommentsListResponse(replies);
+  }
+  // #endregion
+}
