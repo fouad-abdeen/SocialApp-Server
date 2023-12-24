@@ -1,5 +1,6 @@
 import express from "express";
 import * as httpContext from "express-http-context";
+import cors from "cors";
 import cookieParser from "cookie-parser";
 import { Action, useContainer, useExpressServer } from "routing-controllers";
 import { Container } from "typedi";
@@ -16,6 +17,12 @@ export class Express {
     this.app = express();
 
     this.app.use(httpContext.middleware);
+    this.app.use(
+      cors({
+        origin: env.frontend.url,
+        credentials: true,
+      })
+    );
     this.app.use(cookieParser());
 
     // Attach typedi container to routing-controllers
