@@ -96,7 +96,7 @@ export class FileUploadProvider
   async getSignedURL(
     key: string,
     bucket: string,
-    signedUrlExpireSeconds: number
+    signedUrlExpireSeconds = 300
   ): Promise<string> {
     const params = { Key: key, Bucket: bucket };
 

@@ -1,5 +1,5 @@
 import { Post } from "../../models";
-import { Pagination } from "../../types";
+import { Pagination } from "../../shared/pagination.model";
 
 export interface IPostRepository {
   /**
@@ -40,7 +40,8 @@ export interface IPostRepository {
   /**
    *  Gets a post by id
    * @param postId id of the post to get
+   * @param populateImage whether to populate the image field
    * @returns the post
    */
-  getPostById(postId: string): Promise<Post>;
+  getPostById(postId: string, populateImage?: boolean): Promise<Post>;
 }

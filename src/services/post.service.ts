@@ -8,15 +8,20 @@ import {
   env,
   throwError,
 } from "../core";
-import { Post } from "../models";
+import { File, Post } from "../models";
 import Container, { Service } from "typedi";
-import { CommentRepository, PostRepository } from "../repositories";
+import {
+  CommentRepository,
+  FileRepository,
+  PostRepository,
+} from "../repositories";
 
 @Service()
 export class PostService extends BaseService {
   constructor(
     private _postRepository: PostRepository,
     private _commentRepository: CommentRepository,
+    private _fileRepository: FileRepository,
     private _fileService: FileUploadProvider
   ) {
     super(__filename);
@@ -51,7 +56,20 @@ export class PostService extends BaseService {
         throwError(`Failed to upload post's image. ${error.message}`, 400);
       }
 
-      post.image = fileInfo.key;
+      // Get presigned URL for the uploaded file
+      const presignedUrl = await this._fileService.getSignedURL(
+        fileInfo.key,
+        env.awsS3.bucket
+      );
+
+      // Create a new file in the database
+      const file = await this._fileRepository.createFile(
+        fileInfo.key,
+        presignedUrl
+      );
+
+      // Set the post's image
+      post.image = file._id;
     }
 
     return await this._postRepository.createPost(post);
@@ -67,11 +85,11 @@ export class PostService extends BaseService {
     if (user._id !== post.user)
       throwError(`You can't update someone else's post`, 403);
 
-    // get difference between post creation date and current date
+    // Check if the post can be updated or not
     if (post.createdAt) {
       const currentDate = new Date(new Date().toUTCString());
 
-      // get difference in milliseconds between current date and post creation date
+      // Get difference in milliseconds between current date and post creation date
       const millisecondsDifference =
         currentDate.getTime() - post.createdAt.getTime();
 
@@ -91,22 +109,33 @@ export class PostService extends BaseService {
     this._logger.info(`Attempting to delete the post: ${postId}`);
 
     const user = Context.getUser();
-    const post = await this._postRepository.getPostById(postId);
+    const post = (await this._postRepository.getPostById(
+      postId,
+      true
+    )) as Post & { image: File | null };
 
     if (user._id !== post.user)
       throwError(`You can't delete someone else's post`, 403);
 
-    if (post.image.includes(`posts-media/media-${post.user}`)) {
-      this._logger.info("Deleting the post's image");
+    if (post.image) {
+      // Populated image
+      const image = <File>post.image;
 
       try {
-        await this._fileService.deleteFile(post.image, env.awsS3.bucket);
+        this._logger.info("Deleting the post's image");
+
+        // Delete file from S3
+        await this._fileService.deleteFile(image.key, env.awsS3.bucket);
+
+        // Delete file from the database
+        await this._fileRepository.deleteFile(image._id);
       } catch (error: any) {
         this._logger.error(error.message);
         throwError(`Failed to delete your avatar. ${error.message}`, 400);
       }
     }
 
+    // Delete all comments of the post including the replies
     await this._commentRepository.deletePostComments(postId);
 
     await this._postRepository.deletePost(postId);

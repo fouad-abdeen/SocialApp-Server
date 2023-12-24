@@ -7,13 +7,14 @@ import {
   FileUploadProvider,
   throwError,
 } from "../core";
-import { UserRepository } from "../repositories";
+import { FileRepository, UserRepository } from "../repositories";
 import { User } from "../models";
 
 @Service()
 export class UserService extends BaseService {
   constructor(
     private _userRepository: UserRepository,
+    private _fileRepository: FileRepository,
     private _fileService: FileUploadProvider
   ) {
     super(__filename);
@@ -126,9 +127,9 @@ export class UserService extends BaseService {
     // #endregion
   }
 
-  async uploadAvatar(userId: string, avatar: FileUpload): Promise<string> {
+  async uploadAvatar(user: User, avatar: FileUpload): Promise<string> {
     this.setRequestId();
-    this._logger.info(`Attempting to upload ${userId}'s avatar`);
+    this._logger.info(`Attempting to upload ${user._id}'s avatar`);
 
     const { originalname, buffer, size } = avatar;
 
@@ -137,9 +138,9 @@ export class UserService extends BaseService {
     let fileInfo = <FileInfo>{};
 
     try {
-      // Upload file to S3
+      // Upload file to S3, if the user already has an avatar, it will be replaced
       fileInfo = await this._fileService.uploadFile(
-        `avatar-${userId}`,
+        `avatar-${user._id}`,
         `${originalname.split(".").pop()}`,
         buffer,
         env.awsS3.bucket,
@@ -151,14 +152,31 @@ export class UserService extends BaseService {
       throwError(`Failed to upload your avatar. ${error.message}`, 400);
     }
 
-    const query = <unknown>{
-      _id: userId,
-      avatar: fileInfo.key,
-    };
+    if (!user.avatar) {
+      // Generate a signed URL for the file
+      const presignedUrl = await this._fileService.getSignedURL(
+        fileInfo.key,
+        env.awsS3.bucket
+      );
 
-    await this._userRepository.updateUser(<User>query);
+      // Create a new file in the database
+      const file = await this._fileRepository.createFile(
+        fileInfo.key,
+        presignedUrl
+      );
 
-    return fileInfo.key;
+      // Update the user's avatar
+      const query = <unknown>{
+        _id: user._id,
+        avatar: file._id,
+      };
+
+      await this._userRepository.updateUser(<User>query);
+
+      user.avatar = file._id;
+    }
+
+    return user.avatar;
   }
 
   async deleteAvatar(user: User): Promise<void> {
@@ -167,10 +185,16 @@ export class UserService extends BaseService {
     this.setRequestId();
     this._logger.info(`Attempting to delete ${_id}'s avatar`);
 
-    if (!user.avatar.includes(`avatars/avatar-${_id}`)) return;
+    if (!user.avatar) return;
 
     try {
-      await this._fileService.deleteFile(user.avatar, env.awsS3.bucket);
+      const file = await this._fileRepository.getFileById(user.avatar);
+
+      // Delete file from S3
+      await this._fileService.deleteFile(file.key, env.awsS3.bucket);
+
+      // Delete file from the database
+      await this._fileRepository.deleteFile(file._id);
     } catch (error: any) {
       this._logger.error(error.message);
       throwError(`Failed to delete your avatar. ${error.message}`, 400);
@@ -178,7 +202,7 @@ export class UserService extends BaseService {
 
     const query = <unknown>{
       _id,
-      avatar: "",
+      avatar: null,
     };
 
     await this._userRepository.updateUser(<User>query);

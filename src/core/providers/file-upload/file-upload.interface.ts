@@ -35,16 +35,17 @@ export interface IFileUploadProvider {
   getObject(key: string, bucket: string): Promise<unknown>;
 
   /**
-   * Generates a signed URL for a file in AWS S3.
+   * Creates a pre-signed URL for a file object in AWS S3.
    * @param key File key (storage path + name + extension)
    * @param bucket S3 bucket name
-   * @param signedUrlExpireSeconds The number of seconds until the signed URL expires
+   * @param signedUrlExpireSeconds The number of seconds until the signed URL expires,
+   * optional, default is set to 300 seconds (5 minutes)
    * @returns Signed URL
    */
   getSignedURL(
     key: string,
     bucket: string,
-    signedUrlExpireSeconds: number
+    signedUrlExpireSeconds?: number
   ): Promise<string>;
 }
 

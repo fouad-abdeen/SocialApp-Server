@@ -1,6 +1,6 @@
 import { prop } from "@typegoose/typegoose";
 import { TimeStamps } from "@typegoose/typegoose/lib/defaultClasses";
-import { AuthTokenObject } from "../types";
+import { AuthTokenObject } from "../shared/auth.types";
 
 export class User extends TimeStamps {
   public _id!: string;
@@ -37,7 +37,7 @@ export class User extends TimeStamps {
   @prop({ type: String, default: "" })
   public bio!: string;
 
-  @prop({ type: String, default: "" })
+  @prop({ type: String, default: null, ref: "File" })
   public avatar!: string;
 
   @prop({ type: Boolean, default: false })

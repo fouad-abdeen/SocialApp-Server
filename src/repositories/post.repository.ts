@@ -8,7 +8,7 @@ import {
 import { Post } from "../models";
 import { IPostRepository } from "./interfaces";
 import { Model } from "mongoose";
-import { Pagination } from "../types";
+import { Pagination } from "../shared/pagination.model";
 
 @Service()
 export class PostRepository extends BaseService implements IPostRepository {
@@ -67,6 +67,8 @@ export class PostRepository extends BaseService implements IPostRepository {
     this.setRequestId();
     this._logger.info(`Getting timeline posts for user: ${user._id}`);
 
+    // Get the posts of the users that the current user is following
+    // paginated and sorted by the creation date in descending order
     const posts = await this._model
       .find({
         user: { $in: user.followings },
@@ -86,6 +88,7 @@ export class PostRepository extends BaseService implements IPostRepository {
     this.setRequestId();
     this._logger.info(`Getting posts for user: ${userId}`);
 
+    // Get the posts of a user paginated and sorted by the creation date in descending order
     const posts = await this._model
       .find({
         user: userId,
@@ -93,7 +96,7 @@ export class PostRepository extends BaseService implements IPostRepository {
           ? { _id: { $lt: pagination.lastDocumentId } }
           : {}),
       })
-      .sort({ createdAt: -1, _id: -1 })
+      .sort({ _id: -1 })
       .limit(pagination.limit)
       .lean()
       .exec();
@@ -101,11 +104,17 @@ export class PostRepository extends BaseService implements IPostRepository {
     return <Post[]>posts;
   }
 
-  async getPostById(postId: string): Promise<Post> {
+  async getPostById(postId: string, populateImage?: boolean): Promise<Post> {
     this.setRequestId();
     this._logger.info(`Getting post with id: ${postId}`);
 
-    const post = await this._model.findById(postId).lean().exec();
+    const post = await this._model
+      .findById(postId)
+      .populate(populateImage ? "image" : "")
+      .lean()
+      .exec();
+
+    console.log(post);
 
     if (!post) throwError(`Post with Id ${postId} not found`, 404);
 

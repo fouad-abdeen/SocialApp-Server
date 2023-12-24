@@ -5,7 +5,7 @@ export class Post extends TimeStamps {
   public _id!: string;
 
   @prop({ type: String, required: true, ref: "User" })
-  user: string;
+  public user!: string;
 
   @prop({ type: String, required: true })
   public content!: string;
@@ -16,6 +16,6 @@ export class Post extends TimeStamps {
   @prop({ type: String, default: [], ref: "Comment" })
   public comments!: string[];
 
-  @prop({ type: String, default: "" })
+  @prop({ type: String, default: null, ref: "File" })
   public image!: string;
 }
