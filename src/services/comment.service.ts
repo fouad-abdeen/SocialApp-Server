@@ -23,11 +23,11 @@ export class CommentService extends BaseService {
     if (user._id !== comment.user)
       throwError(`You can't update someone else's comment`, 403);
 
-    // get difference between comment creation date and current date
+    // Check if the comment can be updated or not
     if (comment.createdAt) {
       const currentDate = new Date(new Date().toUTCString());
 
-      // get difference in milliseconds between current date and comment creation date
+      // Get difference in milliseconds between current date and comment creation date
       const millisecondsDifference =
         currentDate.getTime() - comment.createdAt.getTime();
 
@@ -92,6 +92,7 @@ export class CommentService extends BaseService {
     if (isMongoId(comment.replyTo))
       throwError(`You can't reply to a reply`, 403);
 
+    // Create the reply in the database
     const reply = await this._commentRepository.createComment(<Comment>{
       user: user._id,
       post: comment.post,
@@ -104,6 +105,7 @@ export class CommentService extends BaseService {
       $addToSet: { replies: reply._id },
     };
 
+    // Add the reply to the comment's replies list
     await this._commentRepository.updateComment(<Comment>commentQuery);
 
     return reply;

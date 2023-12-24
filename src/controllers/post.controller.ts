@@ -18,7 +18,7 @@ import { CommentOnPostRequest, SubmitPostRequest } from "./request";
 import { PostService } from "../services";
 import { CommentResponse, PostResponse } from "./response";
 import { CommentRepository, PostRepository } from "../repositories";
-import { Pagination } from "../types";
+import { Pagination } from "../shared/pagination.model";
 import { isMongoId } from "class-validator";
 
 @JsonController("/posts")
@@ -37,6 +37,13 @@ export class PostController extends BaseService {
   @Post("/")
   @OpenAPI({
     summary: "Submit a post",
+    description: `
+    Submit a post with an optional image.
+    Minimum length of content is 15 characters and maximum is 3000 characters.
+    To submit an image, use Postman and send a multipart/form-data request with a file field with the key 'image'.
+    The image must be of type png, jpg or jpeg and must not exceed 1MB in size.
+    `,
+    security: [{ bearerAuth: [] }],
   })
   @ResponseSchema(PostResponse)
   async submitPost(
@@ -67,6 +74,12 @@ export class PostController extends BaseService {
   @Patch("/:postId")
   @OpenAPI({
     summary: "Update a post",
+    description: `
+    Update the content of a post.
+    Minimum length of content is 15 characters and maximum is 3000 characters.
+    Updating the content is allowed within 1 hour of submitting the post.
+    `,
+    security: [{ bearerAuth: [] }],
   })
   async updatePost(
     @Param("postId") postId: string,
@@ -88,6 +101,7 @@ export class PostController extends BaseService {
   @Delete("/:postId")
   @OpenAPI({
     summary: "Delete a post",
+    security: [{ bearerAuth: [] }],
   })
   async deletePost(@Param("postId") postId: string): Promise<void> {
     this.setRequestId();
@@ -104,6 +118,7 @@ export class PostController extends BaseService {
   @Post("/:postId/like")
   @OpenAPI({
     summary: "Like a post",
+    security: [{ bearerAuth: [] }],
   })
   async likePost(@Param("postId") postId: string): Promise<void> {
     const userId = Context.getUser()._id;
@@ -127,6 +142,11 @@ export class PostController extends BaseService {
   @Post("/:postId/comment")
   @OpenAPI({
     summary: "Comment on a post",
+    description: `
+    Submit a comment on a post.
+    Minimum length of content is 5 characters and maximum is 1000 characters.
+    `,
+    security: [{ bearerAuth: [] }],
   })
   @ResponseSchema(CommentResponse)
   async commentOnPost(
@@ -165,6 +185,13 @@ export class PostController extends BaseService {
   @Get("/")
   @OpenAPI({
     summary: "Get timeline posts",
+    description: `
+    Get a list of posts of the users that the current user is following.
+    The posts are paginated and sorted in descending order of creation date.
+    limit: limit of documents to return, default is 5.
+    lastDocumentId: id of the last document in the previous page. If not provided, it will return the first page.
+    `,
+    security: [{ bearerAuth: [] }],
   })
   @ResponseSchema(PostResponse, { isArray: true })
   async getTimelinePosts(
@@ -188,6 +215,13 @@ export class PostController extends BaseService {
   @Get("/:userId")
   @OpenAPI({
     summary: "Get user posts",
+    description: `
+    Get a list of posts of a user.
+    The posts are paginated and sorted in descending order of creation date.
+    limit: limit of documents to return, default is 5.
+    lastDocumentId: id of the last document in the previous page. If not provided, it will return the first page.
+    `,
+    security: [{ bearerAuth: [] }],
   })
   @ResponseSchema(PostResponse, { isArray: true })
   async getUserPosts(
@@ -203,6 +237,5 @@ export class PostController extends BaseService {
 
     return PostResponse.getPostsListResponse(posts);
   }
-
   // #endregion
 }

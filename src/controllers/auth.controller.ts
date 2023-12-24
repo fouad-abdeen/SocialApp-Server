@@ -33,6 +33,24 @@ export class AuthController extends BaseService {
   @Post("/signup")
   @OpenAPI({
     summary: "Sign up user",
+    description: `
+    Registers a user with given credentials and sends a verification email that is valid for 24 hours. 
+    It also auto-authenticates the user by generating and setting access and refresh tokens as cookies. 
+    Unverified users can only access /auth/logout and /auth/user out of the protected endpoints.
+    Body parameters criteria are as follows:
+      Username: 2 to 20 characters, unique, and follow the specified format:
+        * Starts with a letter and ends with a letter or number.
+        * Contains only letters, numbers, hyphens, underscores, or periods.
+        * Does not contain consecutive hyphens, underscores, or periods.
+      Password: Minimum 8 characters, Should contain at least:
+        * One uppercase letter.
+        * One lowercase letter.
+        * One number.
+        * One special character.
+      Email: Must be a valid and unique email address.
+      First name: Up to 50 characters.
+      Last name: Up to 50 characters.
+    `,
   })
   @ResponseSchema(UserResponse)
   async signup(
@@ -67,6 +85,14 @@ export class AuthController extends BaseService {
   @Post("/login")
   @OpenAPI({
     summary: "Authenticate user",
+    description: `
+    Authenticates a user using either a username or email. This generates access and refresh tokens, set as cookies. 
+    Users have limited access until email verification.  
+    Access tokens are verified on protected endpoint access. 
+      Access token expires in 1 hour and refresh token expires in 24 hours.
+      Expired access tokens trigger refresh token rotation and new access token generation.
+      Inactivity for 24 hours triggers automatic logout.
+    `,
   })
   @ResponseSchema(UserResponse)
   async login(
@@ -102,6 +128,10 @@ export class AuthController extends BaseService {
   @Get("/logout")
   @OpenAPI({
     summary: "Sign out user",
+    description: `
+    Signs out a user by invalidating the access and refresh tokens.
+    Tokens are invalidated by adding them to the token denylist and clearing the cookies.
+    `,
     security: [{ bearerAuth: [] }],
   })
   async logout(
@@ -149,6 +179,10 @@ export class AuthController extends BaseService {
   @Get("/password")
   @OpenAPI({
     summary: "Send password reset link",
+    description: `
+    Sends a password reset link to the user's email address.
+    The link is valid for 6 hours.
+    `,
   })
   async requestPasswordReset(
     @QueryParam("email") email: string
@@ -166,6 +200,9 @@ export class AuthController extends BaseService {
   @Post("/password")
   @OpenAPI({
     summary: "Reset user's password",
+    description: `
+    Resets a user's password using the password reset token. All sessions are terminated after password reset.
+    `,
   })
   async resetPassword(
     @Body() { token, password }: PasswordResetRequest
@@ -182,6 +219,10 @@ export class AuthController extends BaseService {
   @Put("/password")
   @OpenAPI({
     summary: "Update user's password",
+    description: `
+    Updates a user's password and terminates all sessions if terminateAllSessions is true.
+    `,
+    security: [{ bearerAuth: [] }],
   })
   async updatePassword(
     @Body() passwordUpdateRequest: PasswordUpdateRequest,
@@ -215,6 +256,7 @@ export class AuthController extends BaseService {
   @Get("/user")
   @OpenAPI({
     summary: "Get authenticated user's info",
+    security: [{ bearerAuth: [] }],
   })
   @ResponseSchema(UserResponse)
   async getAuthenticatedUser(): Promise<UserResponse> {

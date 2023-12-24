@@ -126,5 +126,5 @@ export class UserProfileResponse {
 
 export class UploadAvatarResponse {
   @IsString()
-  fileKey: string;
+  fileId: string;
 }

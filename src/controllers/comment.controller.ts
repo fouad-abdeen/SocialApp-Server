@@ -18,7 +18,7 @@ import { CommentService } from "../services";
 import { CommentOnPostRequest } from "./request";
 import { CommentRepository } from "../repositories";
 import { Comment } from "../models";
-import { Pagination } from "../types";
+import { Pagination } from "../shared/pagination.model";
 import { isMongoId } from "class-validator";
 
 @JsonController("/comments")
@@ -36,6 +36,12 @@ export class CommentController extends BaseService {
   @Patch("/:commentId")
   @OpenAPI({
     summary: "Update a comment",
+    description: `
+    Update the content of a comment.
+    Minimum length of content is 5 characters and maximum is 1000 characters.
+    Updating the content is allowed within 30 minutes of submission.
+    `,
+    security: [{ bearerAuth: [] }],
   })
   @ResponseSchema(CommentResponse)
   async updateComment(
@@ -62,6 +68,7 @@ export class CommentController extends BaseService {
   @Delete("/:commentId")
   @OpenAPI({
     summary: "Delete a comment",
+    security: [{ bearerAuth: [] }],
   })
   async deleteComment(@Param("commentId") commentId: string): Promise<void> {
     this.setRequestId();
@@ -79,6 +86,7 @@ export class CommentController extends BaseService {
   @Post("/:commentId/like")
   @OpenAPI({
     summary: "Like a comment",
+    security: [{ bearerAuth: [] }],
   })
   async likeComment(@Param("commentId") commentId: string): Promise<void> {
     const userId = Context.getUser()._id;
@@ -103,14 +111,18 @@ export class CommentController extends BaseService {
   @Post("/:commentId/reply")
   @OpenAPI({
     summary: "Reply to a comment",
+    description: `
+    Submit a reply to a comment.
+    Minimum length of content is 5 characters and maximum is 1000 characters.
+    User can't reply to a comment that is a reply to another comment.
+    `,
+    security: [{ bearerAuth: [] }],
   })
   @ResponseSchema(CommentResponse)
   async replyToComment(
     @Param("commentId") commentId: string,
     @Body() { content }: CommentOnPostRequest
   ): Promise<CommentResponse> {
-    const userId = Context.getUser()._id;
-
     this.setRequestId();
     this._logger.info(`Received a reply request to the comment: ${commentId}`);
 
@@ -128,6 +140,12 @@ export class CommentController extends BaseService {
   @Get("/")
   @OpenAPI({
     summary: "Get comments of a post",
+    description: `
+    Get comments of a post paginated and sorted by the creation date in ascending order.
+    limit: limit of documents to return, default is 5.
+    lastDocumentId: id of the last document in the previous page. If not provided, it will return the first page.
+    `,
+    security: [{ bearerAuth: [] }],
   })
   @ResponseSchema(CommentResponse, { isArray: true })
   async getPostComments(
@@ -156,6 +174,12 @@ export class CommentController extends BaseService {
   @Get("/:commentId/replies")
   @OpenAPI({
     summary: "Get replies of a comment",
+    description: `
+    Get replies of a comment paginated and sorted by the creation date in ascending order.
+    limit: limit of documents to return, default is 5.
+    lastDocumentId: id of the last document in the previous page. If not provided, it will return the first page.
+    `,
+    security: [{ bearerAuth: [] }],
   })
   @ResponseSchema(CommentResponse, { isArray: true })
   async getCommentReplies(

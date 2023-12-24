@@ -24,7 +24,7 @@ import {
   AuthTokenObject,
   AuthTokenType,
   AuthTokens,
-} from "../types";
+} from "../shared/auth.types";
 
 @Service()
 export class AuthService extends BaseService {
@@ -47,15 +47,18 @@ export class AuthService extends BaseService {
       `Attempting to sign up user with username ${userSignupData.username}`
     );
 
-    const usernameRegex = /^[a-zA-Z][a-zA-Z0-9_.-]*[a-zA-Z0-9]$/;
+    // Validate username format, see: https://stackoverflow.com/a/12019115/8062659
+    // The accepted formation is explained in the below error message
+    const usernameRegex = /^(?!.*[_.-]{2})[a-zA-Z][a-zA-Z0-9_.-]*[a-zA-Z0-9]$/;
 
     if (!usernameRegex.test(userSignupData.username))
       throw new Error(
-        "Invalid username. Username should start with a letter, " +
-          "can only contain letters, numbers, hyphens, underscores, and periods, " +
-          "and should end with a letter or number."
+        "Invalid username. It should start with a letter and end with a letter or number, " +
+          "contain only letters, numbers, hyphens, underscores, or periods, " +
+          "and not have two consecutive underscores, dots, or hyphens."
       );
 
+    // #region Create the User in the Database
     this._logger.info(`Hashing user's password`);
     userSignupData.password = await this._hashService.hashPassword(
       userSignupData.password
@@ -68,6 +71,7 @@ export class AuthService extends BaseService {
         userSignupData as User
       );
     } catch (error: any) {
+      // If MongoDB throws a duplicate key error, it means that a user with the same email or username already exists
       if (error.message.split("dup key: { email: ").length > 1) {
         throwError(
           "A user with this email already exists. Please choose a different email.",
@@ -82,6 +86,7 @@ export class AuthService extends BaseService {
         );
       }
     }
+    // #endregion
 
     // #region Send Email Verification Mail
     const { _id, email, firstName } = createdUser;
@@ -112,6 +117,7 @@ export class AuthService extends BaseService {
     );
     // #endregion
 
+    // Generate access and refresh tokens
     const tokens = this.getTokens(<AuthPayload>{
       identityId: id,
       email: email,
@@ -134,7 +140,7 @@ export class AuthService extends BaseService {
       accessTokenExpiry = 0,
       refreshTokenExpiry = 0;
 
-    // #region Verify Access and Refresh Tokens
+    // #region Verify Access Token
     try {
       const {
         identityId: id,
@@ -151,7 +157,9 @@ export class AuthService extends BaseService {
     } catch (error: any) {
       throwError(`Failed to verify access token, ${error.message}`, 401);
     }
+    // #endregion
 
+    // #region Verify Refresh Token
     try {
       const { exp } = this._tokenService.verifyToken<
         AuthPayload & { exp: number }
@@ -188,6 +196,7 @@ export class AuthService extends BaseService {
   }: LoginRequest): Promise<AuthResponse> {
     const usingEmail = isEmail(userIdentifier);
 
+    // #region Get User by Email or Username
     const userIdentifierMessage = usingEmail
       ? "email " + userIdentifier
       : "username " + userIdentifier;
@@ -201,6 +210,7 @@ export class AuthService extends BaseService {
     const user = usingEmail
       ? await this._userRepository.getUserByEmail(userIdentifier)
       : await this._userRepository.getUserByUsername(userIdentifier);
+    // #endregion
 
     // #region Clear Expired Tokens
     this._logger.info("Clearing user's expired tokens from Denylist");
@@ -213,6 +223,7 @@ export class AuthService extends BaseService {
       (token) => token.expiresIn > currentTimestampInSeconds
     );
 
+    // Update the user's tokens denylist
     await this._userRepository.updateUser({
       _id: user._id,
       tokensDenylist: updatedtokensDenylist,
@@ -227,6 +238,7 @@ export class AuthService extends BaseService {
 
     if (!passwordMatch) throwError("Invalid password", 401);
 
+    // Generate access and refresh tokens
     const tokens = this.getTokens(<AuthPayload>{
       identityId: user._id.toString(),
       email: user.email,
@@ -255,6 +267,8 @@ export class AuthService extends BaseService {
     let payload = {} as AuthPayload;
 
     try {
+      // Verify the access token and get the payload
+      // If the token is expired, null will be returned
       payload = this._tokenService.verifyToken<AuthPayload>(
         accessToken,
         {},
@@ -280,6 +294,7 @@ export class AuthService extends BaseService {
       try {
         const tokens = this.refreshAccessToken(refreshToken);
 
+        // Set the new access and refresh tokens in the response cookies
         action.response.cookie("accessToken", tokens.accessToken, {
           httpOnly: true,
           secure: true,
@@ -290,6 +305,7 @@ export class AuthService extends BaseService {
           secure: true,
         });
 
+        // Get the payload from the new access token
         payload = this._tokenService.verifyToken<AuthPayload>(
           tokens.accessToken
         );
@@ -298,6 +314,7 @@ export class AuthService extends BaseService {
           "Failed to refresh access token, logging out the user"
         );
 
+        // Clear the cookies as the refresh token is invalid
         action.response.cookie("accessToken", "", {
           httpOnly: true,
           secure: true,
@@ -315,6 +332,7 @@ export class AuthService extends BaseService {
     user = await this._userRepository.getUserByEmail(payload.email);
     user._id = (user._id as string).toString();
 
+    // Deny access if the user's password was updated after the access token was issued
     if (
       <number>payload.signedAt < user.passwordUpdatedAt ||
       user.tokensDenylist.find((object) => object.token === accessToken)
@@ -322,11 +340,12 @@ export class AuthService extends BaseService {
       throwError("Authorization token is not valid anymore", 401);
     // #endregion
 
+    // #region Limit Access to Inactive User Accounts
     const requestUrl = action.request.originalUrl;
     const atLogoutRoute = requestUrl.split("auth/logout").length > 1;
     const atUserQueryRoute = requestUrl.split("auth/user").length > 1;
 
-    // If the user is not verified, allow them to access only the following routes:
+    // If the user is not verified, allow them to access only the following protected routes:
     // GET /auth/logout
     // GET /auth/user
     if (!user.verified && !atLogoutRoute && !atUserQueryRoute)
@@ -334,6 +353,7 @@ export class AuthService extends BaseService {
         "Your account is inactive. Please verify your email address or contact us to activate your account.",
         403
       );
+    // #endregion
 
     this._logger.info("Setting user in Context");
     Context.setUser(user);
@@ -506,6 +526,7 @@ export class AuthService extends BaseService {
     await this._userRepository.updateUser({
       _id: user._id,
       password: hashedPassword,
+      // If terminateAllSessions is true, update the passwordUpdatedAt field to invalidate all previous sessions
       ...(request.terminateAllSessions
         ? { passwordUpdatedAt: +new Date() }
         : {}),
@@ -536,7 +557,6 @@ export class AuthService extends BaseService {
       `Rotating refresh token to generate new access token for user with email ${email}`
     );
 
-    // Invalidate the refresh token
     const updateUserData = <unknown>{
       _id: identityId,
       $addToSet: {
@@ -547,6 +567,7 @@ export class AuthService extends BaseService {
       },
     };
 
+    // Invalidate the refresh token
     this._userRepository.updateUser(<User>updateUserData);
 
     // Generate new access and refresh tokens

@@ -1,21 +1,6 @@
 {
     "components": {
         "schemas": {
-            "Pagination": {
-                "properties": {
-                    "limit": {
-                        "type": "number"
-                    },
-                    "lastDocumentId": {
-                        "pattern": "^[0-9a-fA-F]{24}$",
-                        "type": "string"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "limit"
-                ]
-            },
             "UserResponse": {
                 "properties": {
                     "id": {
@@ -157,13 +142,13 @@
             },
             "UploadAvatarResponse": {
                 "properties": {
-                    "fileKey": {
+                    "fileId": {
                         "type": "string"
                     }
                 },
                 "type": "object",
                 "required": [
-                    "fileKey"
+                    "fileId"
                 ]
             },
             "PostResponse": {
@@ -296,6 +281,18 @@
                     "updatedAt"
                 ]
             },
+            "Pagination": {
+                "properties": {
+                    "limit": {
+                        "type": "number"
+                    },
+                    "lastDocumentId": {
+                        "pattern": "^[0-9a-fA-F]{24}$",
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
             "SignupRequest": {
                 "properties": {
                     "username": {
@@ -313,12 +310,12 @@
                     "firstName": {
                         "type": "string",
                         "maxLength": 50,
-                        "minLength": 2
+                        "minLength": 1
                     },
                     "lastName": {
                         "type": "string",
                         "maxLength": 50,
-                        "minLength": 2
+                        "minLength": 1
                     }
                 },
                 "type": "object",
@@ -381,43 +378,24 @@
                     "newPassword"
                 ]
             },
-            "FollowingQueryParams": {
-                "properties": {
-                    "followingId": {
-                        "pattern": "^[0-9a-fA-F]{24}$",
-                        "type": "string"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "followingId"
-                ]
-            },
             "ProfileEditRequest": {
                 "properties": {
-                    "id": {
-                        "pattern": "^[0-9a-fA-F]{24}$",
-                        "type": "string"
-                    },
                     "firstName": {
                         "type": "string",
                         "maxLength": 50,
-                        "minLength": 2
+                        "minLength": 1
                     },
                     "lastName": {
                         "type": "string",
                         "maxLength": 50,
-                        "minLength": 2
+                        "minLength": 1
                     },
                     "bio": {
                         "type": "string",
                         "maxLength": 200
                     }
                 },
-                "type": "object",
-                "required": [
-                    "id"
-                ]
+                "type": "object"
             },
             "SubmitPostRequest": {
                 "properties": {
@@ -469,7 +447,6 @@
                     {
                         "in": "query",
                         "name": "limit",
-                        "required": true,
                         "schema": {
                             "type": "number"
                         }
@@ -477,7 +454,6 @@
                     {
                         "in": "query",
                         "name": "lastDocumentId",
-                        "required": false,
                         "schema": {
                             "pattern": "^[0-9a-fA-F]{24}$",
                             "type": "string"
@@ -502,6 +478,12 @@
                 "summary": "Search for users by username",
                 "tags": [
                     "User"
+                ],
+                "description": "\n    usernameQuery: query to search for users by username.\n    limit: limit of documents to return, default is 5.\n    lastDocumentId: id of the last document in the previous page, if not provided, it will return the first page.",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
                 ]
             }
         },
@@ -533,19 +515,24 @@
                 "summary": "Get user by username",
                 "tags": [
                     "User"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
                 ]
             }
         },
-        "/users/follow": {
+        "/users/{id}/follow": {
             "post": {
                 "operationId": "UserController.followUser",
                 "parameters": [
                     {
-                        "in": "query",
-                        "name": "followingId",
+                        "in": "path",
+                        "name": "id",
                         "required": true,
                         "schema": {
-                            "pattern": "^[0-9a-fA-F]{24}$",
+                            "pattern": "[^\\/#\\?]+?",
                             "type": "string"
                         }
                     }
@@ -561,19 +548,24 @@
                 "summary": "Follow a user",
                 "tags": [
                     "User"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
                 ]
             }
         },
-        "/users/unfollow": {
+        "/users/{id}/unfollow": {
             "post": {
                 "operationId": "UserController.unfollowUser",
                 "parameters": [
                     {
-                        "in": "query",
-                        "name": "followingId",
+                        "in": "path",
+                        "name": "id",
                         "required": true,
                         "schema": {
-                            "pattern": "^[0-9a-fA-F]{24}$",
+                            "pattern": "[^\\/#\\?]+?",
                             "type": "string"
                         }
                     }
@@ -589,6 +581,11 @@
                 "summary": "Unfollow a user",
                 "tags": [
                     "User"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
                 ]
             }
         },
@@ -598,8 +595,15 @@
                 "parameters": [
                     {
                         "in": "query",
+                        "name": "userId",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
                         "name": "limit",
-                        "required": true,
                         "schema": {
                             "type": "number"
                         }
@@ -607,7 +611,6 @@
                     {
                         "in": "query",
                         "name": "lastDocumentId",
-                        "required": false,
                         "schema": {
                             "pattern": "^[0-9a-fA-F]{24}$",
                             "type": "string"
@@ -632,6 +635,12 @@
                 "summary": "Get list of followers",
                 "tags": [
                     "User"
+                ],
+                "description": "\n    userId: id of the user to get followers for, if not provided, it will return the current user's followers.\n    limit: limit of documents to return, default is 5.\n    lastDocumentId: id of the last document in the previous page, if not provided, it will return the first page.\n    ",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
                 ]
             }
         },
@@ -641,8 +650,15 @@
                 "parameters": [
                     {
                         "in": "query",
+                        "name": "userId",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
                         "name": "limit",
-                        "required": true,
                         "schema": {
                             "type": "number"
                         }
@@ -650,7 +666,6 @@
                     {
                         "in": "query",
                         "name": "lastDocumentId",
-                        "required": false,
                         "schema": {
                             "pattern": "^[0-9a-fA-F]{24}$",
                             "type": "string"
@@ -675,6 +690,12 @@
                 "summary": "Get list of followings",
                 "tags": [
                     "User"
+                ],
+                "description": "\n    userId: id of the user to get followings for, if not provided, it will return the current user's followings.\n    limit: limit of documents to return, default is 5.\n    lastDocumentId: id of the last document in the previous page, if not provided, it will return the first page.\n      ",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
                 ]
             }
         },
@@ -696,6 +717,12 @@
                 "summary": "Update avatar",
                 "tags": [
                     "User"
+                ],
+                "description": "\n    Update avatar by uploading a new profile picture.\n    This API endpoint is not supported here. Follow the below steps to submit a succesful request using Postman:\n     1. Open Postman and create a new HTTP Post request.\n     2. Enter the following url: 'http://localhost:3030/users/avatar'.\n     3. Set the body as form-data and add a field with the key 'avatar' of type File.\n     4. Select the file to upload as a profile picture.\n     5. Submit the request to update the avatar.\n    Maximum file size is 0.5 MB and allowed types are jpg, jpeg, and png.\n    ",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
                 ]
             },
             "delete": {
@@ -711,6 +738,11 @@
                 "summary": "Delete avatar",
                 "tags": [
                     "User"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
                 ]
             }
         },
@@ -731,14 +763,24 @@
                 "responses": {
                     "200": {
                         "content": {
-                            "application/json": {}
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserProfileResponse"
+                                }
+                            }
                         },
-                        "description": "Successful response"
+                        "description": ""
                     }
                 },
                 "summary": "Edit profile",
                 "tags": [
                     "User"
+                ],
+                "description": "\n    First name, last name, and bio are optional.\n    Maximum length for first name and last name is 50 characters.\n    Maximum length for bio is 200 characters.\n    ",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
                 ]
             }
         },
@@ -771,6 +813,12 @@
                 "summary": "Submit a post",
                 "tags": [
                     "Post"
+                ],
+                "description": "\n    Submit a post with an optional image.\n    Minimum length of content is 15 characters and maximum is 3000 characters.\n    To submit an image, use Postman and send a multipart/form-data request with a file field with the key 'image'.\n    The image must be of type png, jpg or jpeg and must not exceed 1MB in size.\n    ",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
                 ]
             },
             "get": {
@@ -779,7 +827,6 @@
                     {
                         "in": "query",
                         "name": "limit",
-                        "required": true,
                         "schema": {
                             "type": "number"
                         }
@@ -787,7 +834,6 @@
                     {
                         "in": "query",
                         "name": "lastDocumentId",
-                        "required": false,
                         "schema": {
                             "pattern": "^[0-9a-fA-F]{24}$",
                             "type": "string"
@@ -812,6 +858,12 @@
                 "summary": "Get timeline posts",
                 "tags": [
                     "Post"
+                ],
+                "description": "\n    Get a list of posts of the users that the current user is following.\n    The posts are paginated and sorted in descending order of creation date.\n    limit: limit of documents to return, default is 5.\n    lastDocumentId: id of the last document in the previous page. If not provided, it will return the first page.\n    ",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
                 ]
             }
         },
@@ -851,6 +903,12 @@
                 "summary": "Update a post",
                 "tags": [
                     "Post"
+                ],
+                "description": "\n    Update the content of a post.\n    Minimum length of content is 15 characters and maximum is 3000 characters.\n    Updating the content is allowed within 1 hour of submitting the post.\n    ",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
                 ]
             },
             "delete": {
@@ -877,6 +935,11 @@
                 "summary": "Delete a post",
                 "tags": [
                     "Post"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
                 ]
             }
         },
@@ -905,6 +968,11 @@
                 "summary": "Like a post",
                 "tags": [
                     "Post"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
                 ]
             }
         },
@@ -948,6 +1016,12 @@
                 "summary": "Comment on a post",
                 "tags": [
                     "Post"
+                ],
+                "description": "\n    Submit a comment on a post.\n    Minimum length of content is 5 characters and maximum is 1000 characters.\n    ",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
                 ]
             }
         },
@@ -967,7 +1041,6 @@
                     {
                         "in": "query",
                         "name": "limit",
-                        "required": true,
                         "schema": {
                             "type": "number"
                         }
@@ -975,7 +1048,6 @@
                     {
                         "in": "query",
                         "name": "lastDocumentId",
-                        "required": false,
                         "schema": {
                             "pattern": "^[0-9a-fA-F]{24}$",
                             "type": "string"
@@ -1000,6 +1072,12 @@
                 "summary": "Get user posts",
                 "tags": [
                     "Post"
+                ],
+                "description": "\n    Get a list of posts of a user.\n    The posts are paginated and sorted in descending order of creation date.\n    limit: limit of documents to return, default is 5.\n    lastDocumentId: id of the last document in the previous page. If not provided, it will return the first page.\n    ",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
                 ]
             }
         },
@@ -1009,7 +1087,7 @@
                 "parameters": [
                     {
                         "in": "query",
-                        "name": "key",
+                        "name": "id",
                         "required": true,
                         "schema": {
                             "type": "string"
@@ -1024,9 +1102,15 @@
                         "description": "Successful response"
                     }
                 },
-                "summary": "Get a file by key",
+                "summary": "Get a file by id",
                 "tags": [
                     "File"
+                ],
+                "description": "\n    This endpoint serves as a proxy to get a file from AWS S3 by redirecting the user to a signed URL.\n    This is done to prevent exposing the AWS S3 bucket URL to the client.\n    This endpoint is not supported by Swagger UI. To get a file, use the following URL in your browser:\n    http://localhost:3030/files?id=<fileId>\n    The 'avatar' field in the user object and the 'image' field in the post object hold a file ID.\n    ",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
                 ]
             }
         },
@@ -1070,6 +1154,12 @@
                 "summary": "Update a comment",
                 "tags": [
                     "Comment"
+                ],
+                "description": "\n    Update the content of a comment.\n    Minimum length of content is 5 characters and maximum is 1000 characters.\n    Updating the content is allowed within 30 minutes of submission.\n    ",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
                 ]
             },
             "delete": {
@@ -1096,6 +1186,11 @@
                 "summary": "Delete a comment",
                 "tags": [
                     "Comment"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
                 ]
             }
         },
@@ -1124,6 +1219,11 @@
                 "summary": "Like a comment",
                 "tags": [
                     "Comment"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
                 ]
             }
         },
@@ -1167,6 +1267,12 @@
                 "summary": "Reply to a comment",
                 "tags": [
                     "Comment"
+                ],
+                "description": "\n    Submit a reply to a comment.\n    Minimum length of content is 5 characters and maximum is 1000 characters.\n    User can't reply to a comment that is a reply to another comment.\n    ",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
                 ]
             }
         },
@@ -1185,7 +1291,6 @@
                     {
                         "in": "query",
                         "name": "limit",
-                        "required": true,
                         "schema": {
                             "type": "number"
                         }
@@ -1193,7 +1298,6 @@
                     {
                         "in": "query",
                         "name": "lastDocumentId",
-                        "required": false,
                         "schema": {
                             "pattern": "^[0-9a-fA-F]{24}$",
                             "type": "string"
@@ -1218,6 +1322,12 @@
                 "summary": "Get comments of a post",
                 "tags": [
                     "Comment"
+                ],
+                "description": "\n    Get comments of a post paginated and sorted by the creation date in ascending order.\n    limit: limit of documents to return, default is 5.\n    lastDocumentId: id of the last document in the previous page. If not provided, it will return the first page.\n    ",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
                 ]
             }
         },
@@ -1237,7 +1347,6 @@
                     {
                         "in": "query",
                         "name": "limit",
-                        "required": true,
                         "schema": {
                             "type": "number"
                         }
@@ -1245,7 +1354,6 @@
                     {
                         "in": "query",
                         "name": "lastDocumentId",
-                        "required": false,
                         "schema": {
                             "pattern": "^[0-9a-fA-F]{24}$",
                             "type": "string"
@@ -1270,6 +1378,12 @@
                 "summary": "Get replies of a comment",
                 "tags": [
                     "Comment"
+                ],
+                "description": "\n    Get replies of a comment paginated and sorted by the creation date in ascending order.\n    limit: limit of documents to return, default is 5.\n    lastDocumentId: id of the last document in the previous page. If not provided, it will return the first page.\n    ",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
                 ]
             }
         },
@@ -1302,7 +1416,8 @@
                 "summary": "Sign up user",
                 "tags": [
                     "Auth"
-                ]
+                ],
+                "description": "\n    Registers a user with given credentials and sends a verification email that is valid for 24 hours. \n    It also auto-authenticates the user by generating and setting access and refresh tokens as cookies. \n    Unverified users can only access /auth/logout and /auth/user out of the protected endpoints.\n    Body parameters criteria are as follows:\n      Username: 2 to 20 characters, unique, and follow the specified format:\n        * Starts with a letter and ends with a letter or number.\n        * Contains only letters, numbers, hyphens, underscores, or periods.\n        * Does not contain consecutive hyphens, underscores, or periods.\n      Password: Minimum 8 characters, Should contain at least:\n        * One uppercase letter.\n        * One lowercase letter.\n        * One number.\n        * One special character.\n      Email: Must be a valid and unique email address.\n      First name: Up to 50 characters.\n      Last name: Up to 50 characters.\n    "
             }
         },
         "/auth/login": {
@@ -1334,7 +1449,8 @@
                 "summary": "Authenticate user",
                 "tags": [
                     "Auth"
-                ]
+                ],
+                "description": "\n    Authenticates a user using either a username or email. This generates access and refresh tokens, set as cookies. \n    Users have limited access until email verification.  \n    Access tokens are verified on protected endpoint access. \n      Access token expires in 1 hour and refresh token expires in 24 hours.\n      Expired access tokens trigger refresh token rotation and new access token generation.\n      Inactivity for 24 hours triggers automatic logout.\n    "
             }
         },
         "/auth/logout": {
@@ -1352,6 +1468,7 @@
                 "tags": [
                     "Auth"
                 ],
+                "description": "\n    Signs out a user by invalidating the access and refresh tokens.\n    Tokens are invalidated by adding them to the token denylist and clearing the cookies.\n    ",
                 "security": [
                     {
                         "bearerAuth": []
@@ -1410,7 +1527,8 @@
                 "summary": "Send password reset link",
                 "tags": [
                     "Auth"
-                ]
+                ],
+                "description": "\n    Sends a password reset link to the user's email address.\n    The link is valid for 6 hours.\n    "
             },
             "post": {
                 "operationId": "AuthController.resetPassword",
@@ -1436,7 +1554,8 @@
                 "summary": "Reset user's password",
                 "tags": [
                     "Auth"
-                ]
+                ],
+                "description": "\n    Resets a user's password using the password reset token. All sessions are terminated after password reset.\n    "
             },
             "put": {
                 "operationId": "AuthController.updatePassword",
@@ -1462,6 +1581,12 @@
                 "summary": "Update user's password",
                 "tags": [
                     "Auth"
+                ],
+                "description": "\n    Updates a user's password and terminates all sessions if terminateAllSessions is true.\n    ",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
                 ]
             }
         },
@@ -1483,6 +1608,11 @@
                 "summary": "Get authenticated user's info",
                 "tags": [
                     "Auth"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
                 ]
             }
         }

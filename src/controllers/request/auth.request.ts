@@ -35,12 +35,12 @@ export class SignupRequest {
   @IsEmail({}, { message: "Invalid or missing email address" })
   email: string;
 
-  @MinLength(2, { message: "First name cannot be shorter than 2 characters" })
+  @IsNotEmpty({ message: "First name cannot be empty" })
   @MaxLength(50, { message: "First name cannot be longer than 50 characters" })
   @IsString({ message: "Invalid first name" })
   firstName: string;
 
-  @MinLength(2, { message: "Last name cannot be shorter than 2 characters" })
+  @IsNotEmpty({ message: "Last name cannot be empty" })
   @MaxLength(50, { message: "Last name cannot be longer than 50 characters" })
   @IsString({ message: "Invalid last name" })
   lastName: string;
