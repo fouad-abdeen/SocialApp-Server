@@ -1,5 +1,5 @@
 import { User } from "../../models";
-import { Pagination } from "../../types";
+import { Pagination } from "../../shared/pagination.model";
 
 export interface IUserRepository {
   /**
@@ -15,6 +15,14 @@ export interface IUserRepository {
    * @returns updated user
    */
   updateUser(user: User): Promise<User>;
+
+  /**
+   * Gets a user by id
+   * @param id id to find user by
+   * @param projection fields to return
+   * @returns found user
+   */
+  getUserById(id: string, projection?: string): Promise<User>;
 
   /**
    * Gets a user by email

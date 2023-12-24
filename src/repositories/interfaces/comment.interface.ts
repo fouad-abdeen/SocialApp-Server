@@ -1,5 +1,5 @@
 import { Comment } from "../../models";
-import { Pagination } from "../../types";
+import { Pagination } from "../../shared/pagination.model";
 
 export interface ICommentRepository {
   /**

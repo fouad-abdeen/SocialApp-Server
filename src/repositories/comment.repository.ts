@@ -3,7 +3,7 @@ import { BaseService, MongodbConnectionProvider, throwError } from "../core";
 import { ICommentRepository } from "./interfaces";
 import { Comment } from "../models";
 import { Model } from "mongoose";
-import { Pagination } from "../types";
+import { Pagination } from "../shared/pagination.model";
 
 @Service()
 export class CommentRepository
@@ -57,7 +57,7 @@ export class CommentRepository
 
   async deletePostComments(postId: string): Promise<void> {
     this.setRequestId();
-    this._logger.info(`Deleting comments for post with id: ${postId}`);
+    this._logger.info(`Deleting all comments for post with id: ${postId}`);
 
     await this._model.deleteMany({ post: postId });
   }
@@ -76,6 +76,7 @@ export class CommentRepository
     this.setRequestId();
     this._logger.info(`Getting comments for post with id: ${postId}`);
 
+    // Get main comments of a post paginated and sorted by the creation date in ascending order
     const comments = await this._model
       .find({
         post: postId,
@@ -99,6 +100,7 @@ export class CommentRepository
     this.setRequestId();
     this._logger.info(`Getting replies for comment with id: ${commentId}`);
 
+    // Get replies of a comment paginated and sorted by the creation date in ascending order
     const comments = await this._model
       .find({
         replyTo: commentId,

@@ -8,7 +8,7 @@ import {
 import { IUserRepository } from "./interfaces";
 import { User } from "../models";
 import { Model } from "mongoose";
-import { Pagination } from "../types";
+import { Pagination } from "../shared/pagination.model";
 
 @Service()
 export class UserRepository extends BaseService implements IUserRepository {
@@ -49,6 +49,20 @@ export class UserRepository extends BaseService implements IUserRepository {
     return <User>updatedUser;
   }
 
+  async getUserById(id: string, projection?: string): Promise<User> {
+    this.setRequestId();
+    this._logger.info(`Getting user by id: ${id}`);
+
+    const user = (await this._model
+      .findById(id, projection)
+      .lean()
+      .exec()) as User;
+
+    if (!user) throwError(`User with id ${id} not found`, 404);
+
+    return user;
+  }
+
   async getUserByEmail(email: string): Promise<User> {
     this.setRequestId();
     this._logger.info(`Getting user by email: ${email}`);
@@ -85,7 +99,9 @@ export class UserRepository extends BaseService implements IUserRepository {
 
     const query = {
       username: {
+        // Search for users with username matching the query
         $regex: usernameQuery,
+        // Make the search case insensitive
         $options: "i",
       },
       _id: {
@@ -94,7 +110,8 @@ export class UserRepository extends BaseService implements IUserRepository {
       },
       // Add an additional condition for pagination based on lastDocumentId
       ...(pagination.lastDocumentId
-        ? { _id: { $gt: pagination.lastDocumentId } }
+        ? // If lastDocumentId is provided, return users with id greater than lastDocumentId
+          { _id: { $gt: pagination.lastDocumentId } }
         : {}),
     };
 
