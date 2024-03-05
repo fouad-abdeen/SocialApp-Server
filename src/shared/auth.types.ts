@@ -1,3 +1,4 @@
+import { ModelOptions, prop } from "@typegoose/typegoose";
 import { User } from "../models";
 
 export enum AuthTokenType {
@@ -7,8 +8,16 @@ export enum AuthTokenType {
   PASSWORD_RESET_TOKEN = "Password Reset Token",
 }
 
+@ModelOptions({
+  schemaOptions: {
+   _id: false,
+  },
+})
 export class AuthTokenObject {
+  @prop({ type: String })
   token: string;
+
+  @prop({ type: Number })
   expiresIn: number;
 }
 

@@ -20,6 +20,8 @@ export class Express {
     this.app.use(
       cors({
         origin: env.frontend.url,
+        methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+        allowedHeaders: ["Content-Type"],
         credentials: true,
       })
     );

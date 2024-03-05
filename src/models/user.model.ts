@@ -1,6 +1,6 @@
 import { prop } from "@typegoose/typegoose";
 import { TimeStamps } from "@typegoose/typegoose/lib/defaultClasses";
-import { AuthTokenObject } from "../shared/auth.types";
+ import { AuthTokenObject } from "../shared/auth.types";
 
 export class User extends TimeStamps {
   public _id!: string;

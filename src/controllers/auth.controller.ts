@@ -11,7 +11,7 @@ import {
 } from "routing-controllers";
 import { OpenAPI, ResponseSchema } from "routing-controllers-openapi";
 import { Service } from "typedi";
-import { BaseService, Context } from "../core";
+import { BaseService, Context, env } from "../core";
 import { AuthService } from "../services";
 import {
   LoginRequest,
@@ -89,7 +89,7 @@ export class AuthController extends BaseService {
     Authenticates a user using either a username or email. This generates access and refresh tokens, set as cookies. 
     Users have limited access until email verification.  
     Access tokens are verified on protected endpoint access. 
-      Access token expires in 1 hour and refresh token expires in 24 hours.
+      Access token expires in 15 minutes and refresh token expires in 24 hours.
       Expired access tokens trigger refresh token rotation and new access token generation.
       Inactivity for 24 hours triggers automatic logout.
     `,

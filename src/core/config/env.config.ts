@@ -48,11 +48,17 @@ export const env = {
       getEnvVariable("AUTH_HASHING_SALT_ROUNDS", "10")
     ),
     jwtSecretKey: getEnvVariable("JWT_SECRET_KEY"),
-    accessTokenExpiresIn: getEnvVariable("JWT_ACCESS_TOKEN_EXPIRES_IN", "1h"),
-    refreshTokenExpiresIn: getEnvVariable("JWT_REFRESH_TOKEN_EXPIRES_IN", "1d"),
+    accessTokenExpiresIn: getEnvVariable(
+      "JWT_ACCESS_TOKEN_EXPIRES_IN",
+      "15min"
+    ),
+    refreshTokenExpiresIn: getEnvVariable(
+      "JWT_REFRESH_TOKEN_EXPIRES_IN",
+      "24h"
+    ),
     emailVerificationTokenExpiresIn: getEnvVariable(
       "JWT_EMAIL_VERIFICATION_TOKEN_EXPIRES_IN",
-      "1d"
+      "48h"
     ),
     passwordResetTokenExpiresIn: getEnvVariable(
       "JWT_PASSWORD_RESET_TOKEN_EXPIRES_IN",

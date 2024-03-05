@@ -36,6 +36,8 @@ export class ErrorHandlerMiddleware implements ExpressErrorMiddlewareInterface {
         (Object.values(error["errors"][0]["constraints"])[0] as string) ||
         error.message;
 
+    res.setHeader("Access-Control-Allow-Origin", env.frontend.url);
+    
     res.status(error.httpCode || 500).json(
       new ErrorResponse({
         name: error.name,

@@ -89,7 +89,6 @@ export class FileController extends BaseService {
 
     // Set response headers to prevent CORS errors when redirecting the user to the signed URL
     response.header("Cross-Origin-Resource-Policy", "same-site");
-    response.header("Access-Control-Allow-Origin", env.frontend.url);
     response.header("Access-Control-Allow-Credentials", "true");
 
     // Redirect the user to the signed URL

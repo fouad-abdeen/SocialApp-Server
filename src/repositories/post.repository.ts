@@ -76,6 +76,7 @@ export class PostRepository extends BaseService implements IPostRepository {
           ? { _id: { $lt: pagination.lastDocumentId } }
           : {}),
       })
+      .populate({ path: "user", select: "username firstName lastName avatar" })
       .sort({ _id: -1 })
       .limit(pagination.limit)
       .lean()

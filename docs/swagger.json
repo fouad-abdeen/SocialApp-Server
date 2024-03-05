@@ -1450,7 +1450,7 @@
                 "tags": [
                     "Auth"
                 ],
-                "description": "\n    Authenticates a user using either a username or email. This generates access and refresh tokens, set as cookies. \n    Users have limited access until email verification.  \n    Access tokens are verified on protected endpoint access. \n      Access token expires in 1 hour and refresh token expires in 24 hours.\n      Expired access tokens trigger refresh token rotation and new access token generation.\n      Inactivity for 24 hours triggers automatic logout.\n    "
+                "description": "\n    Authenticates a user using either a username or email. This generates access and refresh tokens, set as cookies. \n    Users have limited access until email verification.  \n    Access tokens are verified on protected endpoint access. \n      Access token expires in 15 minutes and refresh token expires in 24 hours.\n      Expired access tokens trigger refresh token rotation and new access token generation.\n      Inactivity for 24 hours triggers automatic logout.\n    "
             }
         },
         "/auth/logout": {
