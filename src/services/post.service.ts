@@ -8,12 +8,13 @@ import {
   env,
   throwError,
 } from "../core";
-import { File, Post } from "../models";
+import { File, Post, User } from "../models";
 import Container, { Service } from "typedi";
 import {
   CommentRepository,
   FileRepository,
   PostRepository,
+  UserRepository,
 } from "../repositories";
 
 @Service()
@@ -21,6 +22,7 @@ export class PostService extends BaseService {
   constructor(
     private _postRepository: PostRepository,
     private _commentRepository: CommentRepository,
+    private _userRepository: UserRepository,
     private _fileRepository: FileRepository,
     private _fileService: FileUploadProvider
   ) {
@@ -72,7 +74,16 @@ export class PostService extends BaseService {
       post.image = file._id;
     }
 
-    return await this._postRepository.createPost(post);
+    const createdPost = await this._postRepository.createPost(post);
+
+    const userQuery = <unknown>{
+      _id: post.user,
+      $addToSet: { posts: createdPost._id },
+    };
+
+    await this._userRepository.updateUser(<User>userQuery);
+
+    return createdPost;
   }
 
   async updatePost(postId: string, content: string): Promise<Post> {
@@ -139,5 +150,12 @@ export class PostService extends BaseService {
     await this._commentRepository.deletePostComments(postId);
 
     await this._postRepository.deletePost(postId);
+
+    const userQuery = <unknown>{
+      _id: post.user,
+      $pull: { posts: postId },
+    };
+
+    await this._userRepository.updateUser(<User>userQuery);
   }
 }

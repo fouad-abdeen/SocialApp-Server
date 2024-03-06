@@ -67,14 +67,14 @@ export const env = {
   },
 
   frontend: {
-    url: getEnvVariable("FRONTEND_URL", "http://localhost:5173"),
+    url: getEnvVariable("FRONTEND_URL", "http://localhost:3000"),
     emailVerificationUrl: getEnvVariable(
       "FRONTEND_EMAIL_VERIFICATION_URL",
-      "http://localhost:5173/email-verification"
+      "http://localhost:3000/email-verification"
     ),
     passwordResetUrl: getEnvVariable(
       "FRONTEND_PASSWORD_RESET_URL",
-      "http://localhost:5173/reset-password"
+      "http://localhost:3000/reset-password"
     ),
   },
 
