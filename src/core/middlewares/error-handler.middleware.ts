@@ -27,6 +27,8 @@ export class ErrorHandlerMiddleware implements ExpressErrorMiddlewareInterface {
     // Set requestId of logger to keep track of request
     this.setLogger(req);
 
+    if (res.headersSent) return;
+
     const isValidationError =
       error.message.split("check 'errors' property").length > 1;
 
@@ -37,7 +39,7 @@ export class ErrorHandlerMiddleware implements ExpressErrorMiddlewareInterface {
         error.message;
 
     res.setHeader("Access-Control-Allow-Origin", env.frontend.url);
-    
+
     res.status(error.httpCode || 500).json(
       new ErrorResponse({
         name: error.name,

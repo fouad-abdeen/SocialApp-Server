@@ -1,4 +1,5 @@
 import { Comment } from "../../models";
+import { CommentWithUser } from "../../shared/comment.types";
 import { Pagination } from "../../shared/pagination.model";
 
 export interface ICommentRepository {
@@ -39,20 +40,20 @@ export interface ICommentRepository {
    * Gets comments of a post
    * @param pagination pagination options
    * @param postId id of the post to get comments of
-   * @returns found comments
+   * @returns found comments with user details
    */
-  getPostComments(pagination: Pagination, postId: string): Promise<Comment[]>;
+  getPostComments(pagination: Pagination, postId: string): Promise<CommentWithUser[]>;
 
   /**
    * Gets replies of a comment
    * @param pagination pagination options
    * @param commentId id of the comment to get replies of
-   * @returns found replies
+   * @returns found replies with user details
    */
   getCommentReplies(
     pagination: Pagination,
     commentId: string
-  ): Promise<Comment[]>;
+  ): Promise<CommentWithUser[]>;
 
   /**
    * Gets a comment by id

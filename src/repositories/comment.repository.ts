@@ -4,6 +4,8 @@ import { ICommentRepository } from "./interfaces";
 import { Comment } from "../models";
 import { Model } from "mongoose";
 import { Pagination } from "../shared/pagination.model";
+import { CommentWithUser } from "../shared/comment.types";
+import { PopulatedUser } from "../shared/user.types";
 
 @Service()
 export class CommentRepository
@@ -72,7 +74,7 @@ export class CommentRepository
   async getPostComments(
     pagination: Pagination,
     postId: string
-  ): Promise<Comment[]> {
+  ): Promise<CommentWithUser[]> {
     this.setRequestId();
     this._logger.info(`Getting comments for post with id: ${postId}`);
 
@@ -85,18 +87,19 @@ export class CommentRepository
           ? { _id: { $gt: pagination.lastDocumentId } }
           : {}),
       })
+      .populate({ path: "user", select: "username firstName lastName avatar" })
       .sort({ _id: 1 })
       .limit(pagination.limit)
       .lean()
       .exec();
 
-    return <Comment[]>comments;
+    return comments as Array<Comment & {user: PopulatedUser}>;
   }
 
   async getCommentReplies(
     pagination: Pagination,
     commentId: string
-  ): Promise<Comment[]> {
+  ): Promise<CommentWithUser[]> {
     this.setRequestId();
     this._logger.info(`Getting replies for comment with id: ${commentId}`);
 
@@ -108,12 +111,13 @@ export class CommentRepository
           ? { _id: { $gt: pagination.lastDocumentId } }
           : {}),
       })
+      .populate({ path: "user", select: "username firstName lastName avatar" })
       .sort({ _id: 1 })
       .limit(pagination.limit)
       .lean()
       .exec();
 
-    return <Comment[]>comments;
+    return comments as Array<Comment & {user: PopulatedUser}>;
   }
 
   async getCommentById(commentId: string): Promise<Comment> {

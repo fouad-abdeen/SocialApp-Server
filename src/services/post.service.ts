@@ -16,6 +16,7 @@ import {
   PostRepository,
   UserRepository,
 } from "../repositories";
+import { PostWithUser } from "../shared/post.types";
 
 @Service()
 export class PostService extends BaseService {
@@ -93,7 +94,7 @@ export class PostService extends BaseService {
     const user = Context.getUser();
     const post = await this._postRepository.getPostById(postId);
 
-    if (user._id !== post.user)
+    if (user._id !== post.user._id.toString())
       throwError(`You can't update someone else's post`, 403);
 
     // Check if the post can be updated or not
@@ -123,9 +124,9 @@ export class PostService extends BaseService {
     const post = (await this._postRepository.getPostById(
       postId,
       true
-    )) as Post & { image: File | null };
+    )) as PostWithUser & { image: File | null };
 
-    if (user._id !== post.user)
+    if (user._id !== post.user._id.toString())
       throwError(`You can't delete someone else's post`, 403);
 
     if (post.image) {

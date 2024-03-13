@@ -151,6 +151,33 @@
                     "fileId"
                 ]
             },
+            "User": {
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "username": {
+                        "type": "string"
+                    },
+                    "firstName": {
+                        "type": "string"
+                    },
+                    "lastName": {
+                        "type": "string"
+                    },
+                    "avatar": {
+                        "type": "string"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "username",
+                    "firstName",
+                    "lastName",
+                    "avatar"
+                ]
+            },
             "PostResponse": {
                 "properties": {
                     "id": {
@@ -214,6 +241,69 @@
                     "updatedAt"
                 ]
             },
+            "PostWithUserResponse": {
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "user": {
+                        "$ref": "#/components/schemas/User"
+                    },
+                    "content": {
+                        "type": "string"
+                    },
+                    "likes": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "comments": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "image": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "oneOf": [
+                            {
+                                "format": "date",
+                                "type": "string"
+                            },
+                            {
+                                "format": "date-time",
+                                "type": "string"
+                            }
+                        ]
+                    },
+                    "updatedAt": {
+                        "oneOf": [
+                            {
+                                "format": "date",
+                                "type": "string"
+                            },
+                            {
+                                "format": "date-time",
+                                "type": "string"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "user",
+                    "content",
+                    "likes",
+                    "comments",
+                    "image",
+                    "createdAt",
+                    "updatedAt"
+                ]
+            },
             "CommentResponse": {
                 "properties": {
                     "id": {
@@ -221,6 +311,73 @@
                     },
                     "user": {
                         "type": "string"
+                    },
+                    "post": {
+                        "type": "string"
+                    },
+                    "content": {
+                        "type": "string"
+                    },
+                    "likes": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "replies": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "replyTo": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "oneOf": [
+                            {
+                                "format": "date",
+                                "type": "string"
+                            },
+                            {
+                                "format": "date-time",
+                                "type": "string"
+                            }
+                        ]
+                    },
+                    "updatedAt": {
+                        "oneOf": [
+                            {
+                                "format": "date",
+                                "type": "string"
+                            },
+                            {
+                                "format": "date-time",
+                                "type": "string"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "user",
+                    "post",
+                    "content",
+                    "likes",
+                    "replies",
+                    "replyTo",
+                    "createdAt",
+                    "updatedAt"
+                ]
+            },
+            "CommentWithUserResponse": {
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "user": {
+                        "$ref": "#/components/schemas/User"
                     },
                     "post": {
                         "type": "string"
@@ -846,7 +1003,7 @@
                             "application/json": {
                                 "schema": {
                                     "items": {
-                                        "$ref": "#/components/schemas/PostResponse"
+                                        "$ref": "#/components/schemas/PostWithUserResponse"
                                     },
                                     "type": "array"
                                 }
@@ -941,6 +1098,41 @@
                         "bearerAuth": []
                     }
                 ]
+            },
+            "get": {
+                "operationId": "PostController.getPostById",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "postId",
+                        "required": true,
+                        "schema": {
+                            "pattern": "[^\\/#\\?]+?",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PostWithUserResponse"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                },
+                "summary": "Get a post by ID",
+                "tags": [
+                    "Post"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/posts/{postId}/like": {
@@ -966,6 +1158,37 @@
                     }
                 },
                 "summary": "Like a post",
+                "tags": [
+                    "Post"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "operationId": "PostController.unlikePost",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "postId",
+                        "required": true,
+                        "schema": {
+                            "pattern": "[^\\/#\\?]+?",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {}
+                        },
+                        "description": "Successful response"
+                    }
+                },
+                "summary": "Unlike a post",
                 "tags": [
                     "Post"
                 ],
@@ -1025,7 +1248,7 @@
                 ]
             }
         },
-        "/posts/{userId}": {
+        "/posts/user/{userId}": {
             "get": {
                 "operationId": "PostController.getUserPosts",
                 "parameters": [
@@ -1225,6 +1448,37 @@
                         "bearerAuth": []
                     }
                 ]
+            },
+            "delete": {
+                "operationId": "CommentController.unlikeComment",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "commentId",
+                        "required": true,
+                        "schema": {
+                            "pattern": "[^\\/#\\?]+?",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {}
+                        },
+                        "description": "Successful response"
+                    }
+                },
+                "summary": "Unlike a comment",
+                "tags": [
+                    "Comment"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/comments/{commentId}/reply": {
@@ -1310,7 +1564,7 @@
                             "application/json": {
                                 "schema": {
                                     "items": {
-                                        "$ref": "#/components/schemas/CommentResponse"
+                                        "$ref": "#/components/schemas/CommentWithUserResponse"
                                     },
                                     "type": "array"
                                 }
@@ -1366,7 +1620,7 @@
                             "application/json": {
                                 "schema": {
                                     "items": {
-                                        "$ref": "#/components/schemas/CommentResponse"
+                                        "$ref": "#/components/schemas/CommentWithUserResponse"
                                     },
                                     "type": "array"
                                 }

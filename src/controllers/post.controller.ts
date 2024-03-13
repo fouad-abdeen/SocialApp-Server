@@ -16,7 +16,11 @@ import { OpenAPI, ResponseSchema } from "routing-controllers-openapi";
 import { Comment, Post as SocialPost } from "../models";
 import { CommentOnPostRequest, SubmitPostRequest } from "./request";
 import { PostService } from "../services";
-import { CommentResponse, PostResponse } from "./response";
+import {
+  CommentResponse,
+  PostResponse,
+  PostWithUserResponse,
+} from "./response";
 import { CommentRepository, PostRepository } from "../repositories";
 import { Pagination } from "../shared/pagination.model";
 import { isMongoId } from "class-validator";
@@ -137,6 +141,29 @@ export class PostController extends BaseService {
   }
   // #endregion
 
+  // #region Unlike a post
+  @Authorized()
+  @Delete("/:postId/like")
+  @OpenAPI({
+    summary: "Unlike a post",
+    security: [{ bearerAuth: [] }],
+  })
+  async unlikePost(@Param("postId") postId: string): Promise<void> {
+    const userId = Context.getUser()._id;
+
+    this.setRequestId();
+    this._logger.info(`Received a request to unlike the post: ${postId}`);
+
+    if (!isMongoId(postId)) throwError(`Invalid post id: ${postId}`, 400);
+
+    const query = <unknown>{
+      _id: postId,
+      $pull: { likes: userId },
+    };
+
+    await this._postRepository.updatePost(<SocialPost>query);
+  }
+
   // #region Comment on a post
   @Authorized()
   @Post("/:postId/comment")
@@ -193,10 +220,10 @@ export class PostController extends BaseService {
     `,
     security: [{ bearerAuth: [] }],
   })
-  @ResponseSchema(PostResponse, { isArray: true })
+  @ResponseSchema(PostWithUserResponse, { isArray: true })
   async getTimelinePosts(
     @QueryParams() pagination: Pagination
-  ): Promise<PostResponse[]> {
+  ): Promise<PostWithUserResponse[]> {
     const userId = Context.getUser()._id;
 
     this.setRequestId();
@@ -206,13 +233,13 @@ export class PostController extends BaseService {
 
     const posts = await this._postRepository.getTimelinePosts(pagination);
 
-    return PostResponse.getPostsListResponse(posts);
+    return PostWithUserResponse.getPostsListResponse(posts);
   }
   // #endregion
 
   // #region Get user posts
   @Authorized()
-  @Get("/:userId")
+  @Get("/user/:userId")
   @OpenAPI({
     summary: "Get user posts",
     description: `
@@ -236,6 +263,28 @@ export class PostController extends BaseService {
     const posts = await this._postRepository.getUserPosts(pagination, userId);
 
     return PostResponse.getPostsListResponse(posts);
+  }
+  // #endregion
+
+  // #region Get a post by ID
+  @Authorized()
+  @Get("/:postId")
+  @OpenAPI({
+    summary: "Get a post by ID",
+    security: [{ bearerAuth: [] }],
+  })
+  @ResponseSchema(PostWithUserResponse)
+  async getPostById(
+    @Param("postId") postId: string
+  ): Promise<PostWithUserResponse> {
+    this.setRequestId();
+    this._logger.info(`Received a request to get the post: ${postId}`);
+
+    if (!isMongoId(postId)) throwError(`Invalid post id: ${postId}`, 400);
+
+    const post = await this._postRepository.getPostById(postId);
+
+    return PostWithUserResponse.getPostResponse(post);
   }
   // #endregion
 }

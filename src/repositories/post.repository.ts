@@ -7,8 +7,10 @@ import {
 } from "../core";
 import { Post } from "../models";
 import { IPostRepository } from "./interfaces";
-import { Model } from "mongoose";
+import { Model, PopulateOptions } from "mongoose";
 import { Pagination } from "../shared/pagination.model";
+import { PostWithUser } from "../shared/post.types";
+import { PopulatedUser } from "../shared/user.types";
 
 @Service()
 export class PostRepository extends BaseService implements IPostRepository {
@@ -61,7 +63,7 @@ export class PostRepository extends BaseService implements IPostRepository {
     await this._model.findByIdAndDelete(postId);
   }
 
-  async getTimelinePosts(pagination: Pagination): Promise<Post[]> {
+  async getTimelinePosts(pagination: Pagination): Promise<PostWithUser[]> {
     const user = Context.getUser();
 
     this.setRequestId();
@@ -82,7 +84,7 @@ export class PostRepository extends BaseService implements IPostRepository {
       .lean()
       .exec();
 
-    return <Post[]>posts;
+    return posts as Array<Post & { user: PopulatedUser }>;
   }
 
   async getUserPosts(pagination: Pagination, userId: string): Promise<Post[]> {
@@ -105,20 +107,26 @@ export class PostRepository extends BaseService implements IPostRepository {
     return <Post[]>posts;
   }
 
-  async getPostById(postId: string, populateImage?: boolean): Promise<Post> {
+  async getPostById(
+    postId: string,
+    populateImage?: boolean
+  ): Promise<PostWithUser> {
     this.setRequestId();
     this._logger.info(`Getting post with id: ${postId}`);
 
+    const populateQuery = <PopulateOptions[]>[
+      { path: "user", select: "username firstName lastName avatar" },
+    ];
+    if (populateImage) populateQuery.push({ path: "image" });
+
     const post = await this._model
       .findById(postId)
-      .populate(populateImage ? "image" : "")
+      .populate(populateQuery)
       .lean()
       .exec();
 
-    console.log(post);
-
     if (!post) throwError(`Post with Id ${postId} not found`, 404);
 
-    return <Post>post;
+    return post as Post & { user: PopulatedUser };
   }
 }

@@ -152,13 +152,22 @@ export class UserService extends BaseService {
       throwError(`Failed to upload your avatar. ${error.message}`, 400);
     }
 
-    if (!user.avatar) {
-      // Generate a signed URL for the file
-      const presignedUrl = await this._fileService.getSignedURL(
-        fileInfo.key,
-        env.awsS3.bucket
-      );
+    if (user.avatarUpdatedAt) {
+      const minutesSinceLastUpdate =
+        (Date.now() - user.avatarUpdatedAt) / 60000;
+      if (minutesSinceLastUpdate < 2)
+        throwError(`You can only update your avatar every 2 minutes`, 400);
+    }
 
+    // Generate a signed URL for the file
+    const presignedUrl = await this._fileService.getSignedURL(
+      fileInfo.key,
+      env.awsS3.bucket
+    );
+
+    if (user.avatar)
+      await this._fileRepository.updateFile(user.avatar, presignedUrl);
+    else {
       // Create a new file in the database
       const file = await this._fileRepository.createFile(
         fileInfo.key,
@@ -169,11 +178,12 @@ export class UserService extends BaseService {
       const query = <unknown>{
         _id: user._id,
         avatar: file._id,
+        avatarUpdatedAt: Date.now(),
       };
 
       await this._userRepository.updateUser(<User>query);
 
-      user.avatar = file._id;
+      user.avatar = file._id.toString();
     }
 
     return user.avatar;

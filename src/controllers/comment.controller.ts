@@ -13,7 +13,7 @@ import {
 import { OpenAPI, ResponseSchema } from "routing-controllers-openapi";
 import { Service } from "typedi";
 import { BaseService, Context, throwError } from "../core";
-import { CommentResponse } from "./response";
+import { CommentResponse, CommentWithUserResponse } from "./response";
 import { CommentService } from "../services";
 import { CommentOnPostRequest } from "./request";
 import { CommentRepository } from "../repositories";
@@ -106,6 +106,30 @@ export class CommentController extends BaseService {
   }
   // #endregion
 
+  // #region Unlike a comment
+  @Authorized()
+  @Delete("/:commentId/like")
+  @OpenAPI({
+    summary: "Unlike a comment",
+    security: [{ bearerAuth: [] }],
+  })
+  async unlikeComment(@Param("commentId") commentId: string): Promise<void> {
+    const userId = Context.getUser()._id;
+
+    this.setRequestId();
+    this._logger.info(`Received a request to unlike the comment: ${commentId}`);
+
+    if (!isMongoId(commentId))
+      throwError(`Invalid comment id: ${commentId}`, 400);
+
+    const query = <unknown>{
+      _id: commentId,
+      $pull: { likes: userId },
+    };
+
+    await this._commentRepository.updateComment(<Comment>query);
+  }
+
   // #region Reply to a comment
   @Authorized()
   @Post("/:commentId/reply")
@@ -147,11 +171,11 @@ export class CommentController extends BaseService {
     `,
     security: [{ bearerAuth: [] }],
   })
-  @ResponseSchema(CommentResponse, { isArray: true })
+  @ResponseSchema(CommentWithUserResponse, { isArray: true })
   async getPostComments(
     @QueryParams() pagination: Pagination,
     @QueryParam("postId", { required: true }) postId: string
-  ): Promise<CommentResponse[]> {
+  ): Promise<CommentWithUserResponse[]> {
     this.setRequestId();
     this._logger.info(
       `Received a request to get comments of the post: ${postId}`
@@ -164,7 +188,7 @@ export class CommentController extends BaseService {
       postId
     );
 
-    return CommentResponse.getCommentsListResponse(comments);
+    return CommentWithUserResponse.getCommentsListResponse(comments);
   }
 
   // #endregion
@@ -181,11 +205,11 @@ export class CommentController extends BaseService {
     `,
     security: [{ bearerAuth: [] }],
   })
-  @ResponseSchema(CommentResponse, { isArray: true })
+  @ResponseSchema(CommentWithUserResponse, { isArray: true })
   async getCommentReplies(
     @QueryParams() pagination: Pagination,
     @Param("commentId") commentId: string
-  ): Promise<CommentResponse[]> {
+  ): Promise<CommentWithUserResponse[]> {
     this.setRequestId();
     this._logger.info(
       `Received a request to get replies of the comment: ${commentId}`
@@ -199,7 +223,7 @@ export class CommentController extends BaseService {
       commentId
     );
 
-    return CommentResponse.getCommentsListResponse(replies);
+    return CommentWithUserResponse.getCommentsListResponse(replies);
   }
   // #endregion
 }
