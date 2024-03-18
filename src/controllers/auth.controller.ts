@@ -66,18 +66,10 @@ export class AuthController extends BaseService {
     const { tokens, ...user } = signupResponse;
 
     response.status(201);
-
-    response.cookie("accessToken", tokens.accessToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-    });
-
-    response.cookie("refreshToken", tokens.refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-    });
+    response.setHeader("Set-Cookie", [
+      `accessToken=${tokens.accessToken}; HttpOnly; Secure; SameSite=None;`,
+      `refreshToken=${tokens.refreshToken}; HttpOnly; Secure; SameSite=None;`,
+    ]);
 
     return UserResponse.getUserResponse(user);
   }
@@ -110,23 +102,10 @@ export class AuthController extends BaseService {
     const { tokens, ...user } = authResponse;
 
     response.status(200);
-
     response.setHeader("Set-Cookie", [
       `accessToken=${tokens.accessToken}; HttpOnly; Secure; SameSite=None;`,
       `refreshToken=${tokens.refreshToken}; HttpOnly; Secure; SameSite=None;`,
     ]);
-
-    // response.cookie("accessToken", tokens.accessToken, {
-    //   httpOnly: true,
-    //   secure: true,
-    //   sameSite: "none",
-    // });
-
-    // response.cookie("refreshToken", tokens.refreshToken, {
-    //   httpOnly: true,
-    //   secure: true,
-    //   sameSite: "none",
-    // });
 
     return UserResponse.getUserResponse(user);
   }
@@ -156,20 +135,10 @@ export class AuthController extends BaseService {
     await this._authService.signOutUser({ accessToken, refreshToken });
 
     response.status(200);
-
-    response.cookie("accessToken", "", {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      expires: new Date(0),
-    });
-
-    response.cookie("refreshToken", "", {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      expires: new Date(0),
-    });
+    response.setHeader("Set-Cookie", [
+      `accessToken=; HttpOnly; Secure; SameSite=None; Expires=${new Date(0)};`,
+      `refreshToken=; HttpOnly; Secure; SameSite=None; Expires=${new Date(0)};`,
+    ]);
   }
   // #endregion
 
@@ -246,20 +215,14 @@ export class AuthController extends BaseService {
 
     if (passwordUpdateRequest.terminateAllSessions) {
       response.status(200);
-
-      response.cookie("accessToken", "", {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
-        expires: new Date(0),
-      });
-
-      response.cookie("refreshToken", "", {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
-        expires: new Date(0),
-      });
+      response.setHeader("Set-Cookie", [
+        `accessToken=; HttpOnly; Secure; SameSite=None; Expires=${new Date(
+          0
+        )};`,
+        `refreshToken=; HttpOnly; Secure; SameSite=None; Expires=${new Date(
+          0
+        )};`,
+      ]);
     }
   }
   // #endregion
