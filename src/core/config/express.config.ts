@@ -22,6 +22,7 @@ export class Express {
         origin: env.frontend.url,
         methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
         allowedHeaders: ["Content-Type"],
+        exposedHeaders: ["Set-Cookie"],
         credentials: true,
       })
     );
