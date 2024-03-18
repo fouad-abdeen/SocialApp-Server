@@ -102,10 +102,23 @@ export class AuthController extends BaseService {
     const { tokens, ...user } = authResponse;
 
     response.status(200);
+
     response.setHeader("Set-Cookie", [
       `accessToken=${tokens.accessToken}; HttpOnly; Secure; SameSite=None;`,
       `refreshToken=${tokens.refreshToken}; HttpOnly; Secure; SameSite=None;`,
     ]);
+
+    response.cookie("accessToken", tokens.accessToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+    });
+
+    response.cookie("refreshToken", tokens.refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+    });
 
     return UserResponse.getUserResponse(user);
   }
