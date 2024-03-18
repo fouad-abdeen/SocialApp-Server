@@ -108,18 +108,6 @@ export class AuthController extends BaseService {
       `refreshToken=${tokens.refreshToken}; HttpOnly; Secure; SameSite=None;`,
     ]);
 
-    response.cookie("accessToken", tokens.accessToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-    });
-
-    response.cookie("refreshToken", tokens.refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-    });
-
     return UserResponse.getUserResponse(user);
   }
   // #endregion
