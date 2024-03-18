@@ -70,11 +70,13 @@ export class AuthController extends BaseService {
     response.cookie("accessToken", tokens.accessToken, {
       httpOnly: true,
       secure: true,
+      sameSite: "none",
     });
 
     response.cookie("refreshToken", tokens.refreshToken, {
       httpOnly: true,
       secure: true,
+      sameSite: "none",
     });
 
     return UserResponse.getUserResponse(user);
@@ -112,11 +114,13 @@ export class AuthController extends BaseService {
     response.cookie("accessToken", tokens.accessToken, {
       httpOnly: true,
       secure: true,
+      sameSite: "none",
     });
 
     response.cookie("refreshToken", tokens.refreshToken, {
       httpOnly: true,
       secure: true,
+      sameSite: "none",
     });
 
     return UserResponse.getUserResponse(user);
@@ -151,12 +155,14 @@ export class AuthController extends BaseService {
     response.cookie("accessToken", "", {
       httpOnly: true,
       secure: true,
+      sameSite: "none",
       expires: new Date(0),
     });
 
     response.cookie("refreshToken", "", {
       httpOnly: true,
       secure: true,
+      sameSite: "none",
       expires: new Date(0),
     });
   }
@@ -239,12 +245,14 @@ export class AuthController extends BaseService {
       response.cookie("accessToken", "", {
         httpOnly: true,
         secure: true,
+        sameSite: "none",
         expires: new Date(0),
       });
 
       response.cookie("refreshToken", "", {
         httpOnly: true,
         secure: true,
+        sameSite: "none",
         expires: new Date(0),
       });
     }
