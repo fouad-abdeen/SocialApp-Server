@@ -121,8 +121,8 @@ export class FileUploadProvider
     storagePath: string,
     allowedExtensions?: string[]
   ): FileInfo {
-    const filename = `${name}.${fileExtension}`;
-    const fileKey = `${storagePath}${filename}`;
+    // const filename = `${name}.${fileExtension}`;
+    const fileKey = `${storagePath}${name}`;
 
     if (allowedExtensions) {
       fileExtension = fileExtension.toLowerCase();
