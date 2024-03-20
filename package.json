@@ -1,7 +1,7 @@
 {
   "name": "social_app.server",
   "version": "1.0.0",
-  "main": "src/main.ts",
+  "main": "build/main.js",
   "license": "MIT",
   "scripts": {
     "start": "node ./build/main.js",
