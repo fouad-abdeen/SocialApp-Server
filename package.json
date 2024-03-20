@@ -9,7 +9,6 @@
     "prod": "set NODE_ENV=production&& npm run serve",
     "dev": "nodemon",
     "build": "npx tsc -p .",
-    "postbuild": "node main.js",
     "seed-database": "npx ts-node ./database-scripts/database-seed.ts"
   },
   "dependencies": {
