@@ -3,7 +3,7 @@
     "target": "es6",                          
     "module": "commonjs",                    
     "lib": ["es6"],                     
-    "outDir": "build",                          
+    "outDir": "./",                          
     "rootDir": "src",
     "strict": true,         
     "noImplicitAny": false,
