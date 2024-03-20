@@ -4,7 +4,7 @@
   "main": "build/main.js",
   "license": "MIT",
   "scripts": {
-    "start": "npx ts-node ./src/main.ts",
+    "start": "ts-node ./src/main.ts",
     "prod": "set NODE_ENV=production&& npm start",
     "dev": "nodemon",
     "build": "npx tsc -p .",
