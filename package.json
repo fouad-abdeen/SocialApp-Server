@@ -1,12 +1,11 @@
 {
   "name": "social_app.server",
   "version": "1.0.0",
-  "main": "main.js",
+  "main": "build/main.js",
   "license": "MIT",
   "scripts": {
-    "start": "node main.js",
-    "serve": "npx ts-node ./src/main.ts",
-    "prod": "set NODE_ENV=production&& npm run serve",
+    "start": "npx ts-node ./src/main.ts",
+    "prod": "set NODE_ENV=production&& npm start",
     "dev": "nodemon",
     "build": "npx tsc -p .",
     "seed-database": "npx ts-node ./database-scripts/database-seed.ts"
