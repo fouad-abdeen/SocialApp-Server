@@ -8,6 +8,7 @@
     "prod": "set NODE_ENV=production&& npm start",
     "dev": "nodemon",
     "build": "npx tsc -p .",
+    "postbuild": "npm install ts-node@10.9.1",
     "seed-database": "npx ts-node ./database-scripts/database-seed.ts"
   },
   "dependencies": {
