@@ -4,7 +4,7 @@
   "main": "src/main.ts",
   "license": "MIT",
   "scripts": {
-    "start": "node ./build/main.js",
+    "start": "node ./main.js",
     "serve": "npx ts-node ./src/main.ts",
     "prod": "set NODE_ENV=production&& npm run serve",
     "dev": "nodemon",
