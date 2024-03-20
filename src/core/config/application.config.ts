@@ -14,10 +14,9 @@ export class Application {
     const log = new Logger("App");
     log.info("Starting...");
 
-    this.express = new Express(dirname);
-
-    registerServices(log);
-
-    displayBanner(log);
+    registerServices(log).then(() => {
+      this.express = new Express(dirname);
+      displayBanner(log);
+    });
   }
 }
