@@ -4,8 +4,9 @@
   "main": "src/main.ts",
   "license": "MIT",
   "scripts": {
-    "start": "npx ts-node ./src/main.ts",
-    "prod": "set NODE_ENV=production&& npm start",
+    "start": "node ./build/main.js",
+    "serve": "npx ts-node ./src/main.ts",
+    "prod": "set NODE_ENV=production&& npm run serve",
     "dev": "nodemon",
     "build": "npx tsc -p .",
     "seed-database": "npx ts-node ./database-scripts/database-seed.ts"
