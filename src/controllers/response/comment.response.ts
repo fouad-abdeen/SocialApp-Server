@@ -100,7 +100,7 @@ export class CommentWithUserResponse {
 
   public static getCommentsListResponse(comments: CommentWithUser[]) {
     return comments.map((comment) =>
-      CommentResponse.getCommentResponse(comment)
+      CommentWithUserResponse.getCommentResponse(comment)
     );
   }
 }
