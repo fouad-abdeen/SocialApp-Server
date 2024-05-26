@@ -91,6 +91,10 @@ export const env = {
     brevoApiKey: getEnvVariable("BREVO_API_KEY"),
   },
 
+  webSocket: {
+    serverPort: getEnvVariable("WEBSOCKET_SERVER_PORT", "3031"),
+  },
+
   awsS3: {
     accessKeyId: getEnvVariable("AWS_S3_ACCESS_KEY_ID"),
     secretAccessKey: getEnvVariable("AWS_S3_SECRET_ACCESS_KEY"),

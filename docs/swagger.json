@@ -438,6 +438,59 @@
                     "updatedAt"
                 ]
             },
+            "NotificationResponse": {
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "user": {
+                        "type": "string"
+                    },
+                    "content": {
+                        "type": "string"
+                    },
+                    "action": {
+                        "type": "string"
+                    },
+                    "actionMetadata": {
+                        "type": "object"
+                    },
+                    "createdAt": {
+                        "oneOf": [
+                            {
+                                "format": "date",
+                                "type": "string"
+                            },
+                            {
+                                "format": "date-time",
+                                "type": "string"
+                            }
+                        ]
+                    },
+                    "updatedAt": {
+                        "oneOf": [
+                            {
+                                "format": "date",
+                                "type": "string"
+                            },
+                            {
+                                "format": "date-time",
+                                "type": "string"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "user",
+                    "content",
+                    "action",
+                    "actionMetadata",
+                    "createdAt",
+                    "updatedAt"
+                ]
+            },
             "Pagination": {
                 "properties": {
                     "limit": {
@@ -1297,6 +1350,53 @@
                     "Post"
                 ],
                 "description": "\n    Get a list of posts of a user.\n    The posts are paginated and sorted in descending order of creation date.\n    limit: limit of documents to return, default is 5.\n    lastDocumentId: id of the last document in the previous page. If not provided, it will return the first page.\n    ",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/notifications/": {
+            "get": {
+                "operationId": "FileController.getNotifications",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "limit",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "lastDocumentId",
+                        "schema": {
+                            "pattern": "^[0-9a-fA-F]{24}$",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": {
+                                        "$ref": "#/components/schemas/NotificationResponse"
+                                    },
+                                    "type": "array"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                },
+                "summary": "Get user notifications",
+                "tags": [
+                    "File"
+                ],
+                "description": "\n      Get a list of notifications of a user.\n      The notifications are paginated and sorted in descending order of creation date.\n      limit: limit of documents to return, default is 5.\n      lastDocumentId: id of the last document in the previous page. If not provided, it will return the first page.\n      ",
                 "security": [
                     {
                         "bearerAuth": []

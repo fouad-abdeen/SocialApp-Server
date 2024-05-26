@@ -4,6 +4,7 @@ import {
   Logger,
   MailProvider,
   MongodbConnectionProvider,
+  SocketConnectionProvider,
   env,
 } from "..";
 import { AuthTokenProvider } from "../providers/auth/auth-token.provider";
@@ -30,6 +31,12 @@ export const registerServices = async (logger: Logger) => {
       name: env.mail.senderName,
       email: env.mail.senderMailAddress,
     })
+  );
+
+  logger.info("Registering Socket Service");
+  Container.set(
+    SocketConnectionProvider,
+    new SocketConnectionProvider(logger, env.frontend.url)
   );
 
   logger.info("Registering File Upload Service");

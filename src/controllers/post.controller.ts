@@ -15,7 +15,7 @@ import { Service } from "typedi";
 import { OpenAPI, ResponseSchema } from "routing-controllers-openapi";
 import { Comment, Post as SocialPost } from "../models";
 import { CommentOnPostRequest, SubmitPostRequest } from "./request";
-import { PostService } from "../services";
+import { NotificationService, PostService } from "../services";
 import {
   CommentResponse,
   PostResponse,
@@ -24,12 +24,14 @@ import {
 import { CommentRepository, PostRepository } from "../repositories";
 import { Pagination } from "../shared/pagination.model";
 import { isMongoId } from "class-validator";
+import { truncateValue } from "../core/utils/truncate";
 
 @JsonController("/posts")
 @Service()
 export class PostController extends BaseService {
   constructor(
     private _postService: PostService,
+    private _notificationService: NotificationService,
     private _postRepository: PostRepository,
     private _commentRepository: CommentRepository
   ) {
@@ -137,7 +139,13 @@ export class PostController extends BaseService {
       $addToSet: { likes: userId },
     };
 
-    await this._postRepository.updatePost(<SocialPost>query);
+    const post = await this._postRepository.updatePost(<SocialPost>query);
+
+    await this._notificationService.notifyAboutPostLike(
+      post.user.toString(),
+      post._id.toString(),
+      truncateValue(post.content)
+    );
   }
   // #endregion
 
