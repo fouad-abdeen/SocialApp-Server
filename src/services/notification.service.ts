@@ -1,8 +1,11 @@
 import Container, { Service } from "typedi";
-import { BaseService, SocketConnectionProvider } from "../core";
+import { BaseService, Context, SocketConnectionProvider } from "../core";
 import { NotificationRepository } from "../repositories";
 import { Notification } from "../models";
-import { NotificationAction } from "../shared/notification.types";
+import {
+  NotificationAction,
+  NotificationActionMetadata,
+} from "../shared/notification.types";
 
 @Service()
 export class NotificationService extends BaseService {
@@ -18,6 +21,8 @@ export class NotificationService extends BaseService {
     userId: string,
     followerUsername: string
   ): Promise<void> {
+    if (Context.getUser()._id === userId) return;
+
     this.setRequestId();
     this._logger.info(
       `Notifying the user with id ${userId} about a follow request`
@@ -30,65 +35,132 @@ export class NotificationService extends BaseService {
       content: `${followerUsername} has started following you`,
       action: NotificationAction.FOLLOW_REQUEST,
       actionMetadata: {
-        username: followerUsername,
+        followerUsername,
+        followingId: userId,
       },
     });
 
     await this.sendWebNotification(userId, notification);
   }
 
-  async notifyAboutPostLike(
+  async notifyAboutActionOnContent(
     userId: string,
-    postId: string,
-    postContent: string
+    contentType: "post" | "comment",
+    action: NotificationAction,
+    actionMetadata: NotificationActionMetadata
   ): Promise<void> {
+    if (Context.getUser()._id === userId) return;
+
+    const actionVerb = action.split("_")[1];
+
     this.setRequestId();
-    this._logger.info(`Notifying the user with id ${userId} about a post like`);
+    this._logger.info(
+      `Notifying the user with id ${userId} about a ${actionVerb} on their ${contentType}`
+    );
 
     let notification =
       await this._notificationRepository.getNotificationByActionMetadata(
-        NotificationAction.POST_LIKE,
+        action,
         {
-          postId,
+          postId: actionMetadata.postId,
+          commentId: actionMetadata.commentId,
         }
       );
 
-    if (notification) {
-      // If the notification is already read, reset the notification and update the content
-      if (notification.isRead) {
-        notification.isRead = false;
-        notification.actionMetadata.numberOfLikes = 1;
-        notification.content = `You have a new like on your post: ${postContent}`;
-      }
-      // If the notification is not read, update the content
-      else {
-        (<number>notification.actionMetadata.numberOfLikes) += 1;
-        notification.content = `You have ${notification.actionMetadata.numberOfLikes} likes on your post: ${postContent}`;
-      }
-
-      await this._notificationRepository.updateNotification(notification);
-    } else {
+    if (notification)
+      await this.updateNotification(
+        notification,
+        contentType,
+        actionMetadata,
+        actionVerb
+      );
+    else
       notification = await this._notificationRepository.createNotification(<
         Notification
       >{
         user: userId,
-        content: `You have a new like on your post: ${postContent}`,
-        action: NotificationAction.POST_LIKE,
-        actionMetadata: {
-          postId,
-          numberOfLikes: 1,
-          postBriefContent: postContent,
-        },
+        content: `You have a new ${actionVerb} on your ${contentType}: ${actionMetadata.contentBrief}`,
+        action,
+        actionMetadata,
       });
-    }
 
     await this.sendWebNotification(userId, notification);
   }
 
-  // Other methods to implement:
-  // 1. notifyAboutPostComment
-  // 2. notifyAboutCommentLike
-  // 3. notifyAboutCommentReply
+  async removeNotificationAction(
+    userId: string,
+    action: NotificationAction,
+    actionMetadata: NotificationActionMetadata
+  ): Promise<void> {
+    if (Context.getUser()._id === userId) return;
+
+    this.setRequestId();
+    this._logger.info(
+      `Removing the notification action for the user with id ${userId}`
+    );
+
+    const notification =
+      await this._notificationRepository.getNotificationByActionMetadata(
+        action,
+        {
+          postId: actionMetadata.postId,
+          commentId: actionMetadata.commentId,
+        }
+      );
+
+    if (!notification) return;
+
+    const numberOfActions =
+      notification.actionMetadata.actionDatabaseDocuments.length;
+
+    if (numberOfActions === 1) {
+      await this._notificationRepository.deleteNotification(notification._id);
+    } else {
+      const actionVerb = action.split("_")[1];
+      const pluralActionVerb =
+        actionVerb === "reply" ? "replies" : `${actionVerb}s`;
+
+      notification.content = notification.content.replace(
+        `You have ${numberOfActions} new ${pluralActionVerb}`,
+        numberOfActions === 2
+          ? `You have a new ${actionVerb}`
+          : `You have ${numberOfActions - 1} new ${pluralActionVerb}`
+      );
+
+      notification.actionMetadata.actionDatabaseDocuments =
+        notification.actionMetadata.actionDatabaseDocuments.filter(
+          (id) => id !== actionMetadata.actionDatabaseDocuments[0]
+        );
+
+      await this._notificationRepository.updateNotification(notification);
+    }
+  }
+
+  private async updateNotification(
+    notification: Notification,
+    contentType: "post" | "comment",
+    newMetadata: NotificationActionMetadata,
+    actionVerb: string
+  ): Promise<void> {
+    const pluralActionVerb =
+      actionVerb === "reply" ? "replies" : `${actionVerb}s`;
+
+    if (notification.isRead) {
+      // If the notification is already read, reset the notification and update the content
+      notification.isRead = false;
+      notification.actionMetadata.actionDatabaseDocuments =
+        newMetadata.actionDatabaseDocuments;
+      notification.content = `You have a new ${actionVerb} on your ${contentType}: ${newMetadata.contentBrief}`;
+    } else {
+      // If the notification is not read, update the content
+      notification.actionMetadata.actionDatabaseDocuments.push(
+        ...newMetadata.actionDatabaseDocuments
+      );
+      notification.content = `You have ${notification.actionMetadata.actionDatabaseDocuments.length} new ${pluralActionVerb} on your ${contentType}: ${newMetadata.contentBrief}`;
+    }
+
+    await this._notificationRepository.updateNotification(notification);
+  }
 
   private async sendWebNotification(
     userId: string,

@@ -13,6 +13,7 @@ import Container, { Service } from "typedi";
 import {
   CommentRepository,
   FileRepository,
+  NotificationRepository,
   PostRepository,
   UserRepository,
 } from "../repositories";
@@ -25,6 +26,7 @@ export class PostService extends BaseService {
     private _commentRepository: CommentRepository,
     private _userRepository: UserRepository,
     private _fileRepository: FileRepository,
+    private _notificationRepository: NotificationRepository,
     private _fileService: FileUploadProvider
   ) {
     super(__filename);
@@ -158,5 +160,10 @@ export class PostService extends BaseService {
     };
 
     await this._userRepository.updateUser(<User>userQuery);
+
+    // Delete all notifications related to the post
+    await this._notificationRepository.deleteNotificationsByActionMetadata({
+      postId,
+    });
   }
 }

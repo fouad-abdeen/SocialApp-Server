@@ -8,22 +8,18 @@ export enum NotificationAction {
 
 /**
  * Metadata for a notification action
- * @param username The username of a new follower
+ * @param followerUsername Username of the follower
+ * @param followingId Id of the user being followed
  * @param postId Id of the post that was liked or commented on
  * @param commentId Id of the comment that was liked or replied to
- * @param numberOfLikes Number of likes on a post or comment
- * @param numberOfComments Number of comments on a post
- * @param numberOfReplies Number of replies on a comment
- * @param postBriefContent Brief content of the post
- * @param commentBriefContent Brief content of the comment
+ * @param actionDatabaseDocuments Database documents related to the action
+ * @param contentBrief Brief content of the post or comment
  */
 export interface NotificationActionMetadata {
-  username?: string;
+  actionDatabaseDocuments: string[];
+  followerUsername?: string;
+  followingId?: string;
   postId?: string;
   commentId?: string;
-  numberOfLikes?: number;
-  numberOfComments?: number;
-  numberOfReplies?: number;
-  postBriefContent?: string;
-  commentBriefContent?: string;
+  contentBrief?: string;
 }

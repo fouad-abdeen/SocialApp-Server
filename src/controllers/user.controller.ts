@@ -109,7 +109,7 @@ export class UserController extends BaseService {
       `Received a follow request from ${userId} to ${followingId}`
     );
 
-    await this._userService.followUser(userId, followingId);
+    await this._userService.followUser(followingId);
   }
   // #endregion
 
@@ -131,7 +131,7 @@ export class UserController extends BaseService {
       `Received an unfollow request from ${userId} to ${followingId}`
     );
 
-    await this._userService.unfollowUser(userId, followingId);
+    await this._userService.unfollowUser(followingId);
   }
   // #endregion
 

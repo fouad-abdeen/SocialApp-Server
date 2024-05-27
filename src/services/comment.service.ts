@@ -1,14 +1,23 @@
 import { Service } from "typedi";
 import { BaseService, Context, throwError } from "../core";
-import { CommentRepository, PostRepository } from "../repositories";
+import {
+  CommentRepository,
+  NotificationRepository,
+  PostRepository,
+} from "../repositories";
 import { Comment, Post } from "../models";
 import { isMongoId } from "class-validator";
+import { truncateValue } from "../core/utils/truncate";
+import { NotificationAction } from "../shared/notification.types";
+import { NotificationService } from "./notification.service";
 
 @Service()
 export class CommentService extends BaseService {
   constructor(
     private _commentRepository: CommentRepository,
-    private _postRepository: PostRepository
+    private _postRepository: PostRepository,
+    private _notificationRepository: NotificationRepository,
+    private _notificationService: NotificationService
   ) {
     super(__filename);
   }
@@ -55,8 +64,8 @@ export class CommentService extends BaseService {
     if (comment.user !== userId)
       throwError(`You can't delete someone else's comment`, 403);
 
-    // If the comment is a reply to another comment
-    if (isMongoId(comment.replyTo)) {
+    const isReplyToAnotherComment = isMongoId(comment.replyTo);
+    if (isReplyToAnotherComment) {
       const query = <unknown>{
         _id: comment.replyTo,
         $pull: { replies: commentId },
@@ -80,6 +89,33 @@ export class CommentService extends BaseService {
     }
 
     await this._commentRepository.deleteComment(commentId);
+
+    if (isReplyToAnotherComment)
+      // Remove the notification about the reply
+      await this._notificationService.removeNotificationAction(
+        userId,
+        NotificationAction.COMMENT_REPLY,
+        {
+          actionDatabaseDocuments: [commentId],
+          commentId: comment.replyTo.toString(),
+        }
+      );
+    else {
+      // Remove the notification about the comment
+      await this._notificationService.removeNotificationAction(
+        userId,
+        NotificationAction.POST_COMMENT,
+        {
+          actionDatabaseDocuments: [commentId],
+          postId: comment.post.toString(),
+        }
+      );
+
+      // Delete all notifications related to the comment
+      await this._notificationRepository.deleteNotificationsByActionMetadata({
+        commentId,
+      });
+    }
   }
 
   async replyToComment(commentId: string, content: string): Promise<Comment> {
@@ -107,6 +143,36 @@ export class CommentService extends BaseService {
 
     // Add the reply to the comment's replies list
     await this._commentRepository.updateComment(<Comment>commentQuery);
+
+    const notification =
+      await this._notificationRepository.getNotificationByActionMetadata(
+        NotificationAction.COMMENT_REPLY,
+        {
+          commentId,
+        }
+      );
+
+    // Check if the comment's owner has already been notified about the reply
+    if (
+      notification &&
+      notification.actionMetadata.actionDatabaseDocuments.includes(
+        reply._id.toString()
+      )
+    )
+      return reply;
+
+    // Notify the comment's owner about the reply
+    await this._notificationService.notifyAboutActionOnContent(
+      comment.user.toString(),
+      "comment",
+      NotificationAction.COMMENT_REPLY,
+      {
+        actionDatabaseDocuments: [reply._id.toString()],
+        postId: comment.post.toString(),
+        commentId: comment._id.toString(),
+        contentBrief: truncateValue(comment.content),
+      }
+    );
 
     return reply;
   }

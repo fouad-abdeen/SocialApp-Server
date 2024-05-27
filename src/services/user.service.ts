@@ -1,28 +1,39 @@
 import Container, { Service } from "typedi";
 import {
   BaseService,
+  Context,
   env,
   FileInfo,
   FileUpload,
   FileUploadProvider,
   throwError,
 } from "../core";
-import { FileRepository, UserRepository } from "../repositories";
+import {
+  FileRepository,
+  NotificationRepository,
+  UserRepository,
+} from "../repositories";
 import { User } from "../models";
+import { NotificationService } from "./notification.service";
 
 @Service()
 export class UserService extends BaseService {
   constructor(
     private _userRepository: UserRepository,
     private _fileRepository: FileRepository,
-    private _fileService: FileUploadProvider
+    private _notificationRepository: NotificationRepository,
+    private _fileService: FileUploadProvider,
+    private _notificationService: NotificationService
   ) {
     super(__filename);
     if (!this._fileService)
       this._fileService = Container.get(FileUploadProvider);
   }
 
-  async followUser(followerId: string, followingId: string): Promise<void> {
+  async followUser(followingId: string): Promise<void> {
+    const user = Context.getUser(),
+      followerId = user._id;
+
     this.setRequestId();
     this._logger.info(
       `Attempting to add ${followingId} to ${followerId}'s followings list`
@@ -74,9 +85,18 @@ export class UserService extends BaseService {
       throwError(`Failed to add the user to your followings list`, 400);
     }
     // #endregion
+
+    // Notify the followed user about the follow request
+    await this._notificationService.notifyAboutFollowRequest(
+      followingId,
+      user.username
+    );
   }
 
-  async unfollowUser(followerId: string, followingId: string): Promise<void> {
+  async unfollowUser(followingId: string): Promise<void> {
+    const user = Context.getUser(),
+      followerId = user._id;
+
     this.setRequestId();
     this._logger.info(
       `Attempting to remove ${followingId} from ${followerId}'s followings list`
@@ -125,6 +145,12 @@ export class UserService extends BaseService {
       throwError(`Failed to remove the user from your followings list`, 400);
     }
     // #endregion
+
+    // Delete the follow request notification
+    await this._notificationRepository.deleteNotificationsByActionMetadata({
+      followerUsername: user.username,
+      followingId,
+    });
   }
 
   async uploadAvatar(user: User, avatar: FileUpload): Promise<string> {

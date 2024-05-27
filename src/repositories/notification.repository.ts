@@ -1,5 +1,10 @@
 import { Model } from "mongoose";
-import { BaseService, MongodbConnectionProvider, throwError } from "../core";
+import {
+  BaseService,
+  Context,
+  MongodbConnectionProvider,
+  throwError,
+} from "../core";
 import { INotificationRepository } from "./interfaces";
 import { Notification } from "../models";
 import Container, { Service } from "typedi";
@@ -56,9 +61,44 @@ export class NotificationRepository
     return <Notification>updatedNotification;
   }
 
+  async deleteNotification(notificationId: string): Promise<void> {
+    this.setRequestId();
+    this._logger.info(`Deleting notification with id: ${notificationId}`);
+
+    await this._model.findByIdAndDelete(notificationId);
+  }
+
+  async deleteNotificationsByActionMetadata(
+    actionMetadata: Partial<NotificationActionMetadata>
+  ): Promise<void> {
+    this.setRequestId();
+    this._logger.info(
+      `Deleting notifications with actionMetadata: ${JSON.stringify(
+        actionMetadata
+      )}`
+    );
+
+    const query = {};
+
+    // If the notification action is a follow request
+    if (actionMetadata.followerUsername)
+      query["actionMetadata.followerUsername"] =
+        actionMetadata.followerUsername;
+    if (actionMetadata.followingId)
+      query["actionMetadata.followingId"] = actionMetadata.followingId;
+
+    // If the notification action is a post or comment
+    if (actionMetadata.postId)
+      query["actionMetadata.postId"] = actionMetadata.postId;
+    if (actionMetadata.commentId)
+      query["actionMetadata.commentId"] = actionMetadata.commentId;
+
+    await this._model.deleteMany(query);
+  }
+
   async getNotificationByActionMetadata(
     action: string,
-    actionMetadata: NotificationActionMetadata
+    actionMetadata: Partial<NotificationActionMetadata>
   ): Promise<Notification> {
     this.setRequestId();
     this._logger.info(

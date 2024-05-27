@@ -16,6 +16,20 @@ export interface INotificationRepository {
   updateNotification(notification: Notification): Promise<Notification>;
 
   /**
+   * Deletes a notification
+   * @param notificationId id of the notification
+   */
+  deleteNotification(notificationId: string): Promise<void>;
+
+  /**
+   * Deletes all notifications about a post or comment
+   * @param actionMetadata metadata of the action
+   */
+  deleteNotificationsByActionMetadata(
+    actionMetadata: Partial<NotificationActionMetadata>
+  ): Promise<void>;
+
+  /**
    * Gets a notification by action metadata
    * @param action action of the notification
    * @param actionMetadata metadata of the action

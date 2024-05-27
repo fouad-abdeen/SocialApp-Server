@@ -21,10 +21,15 @@ import {
   PostResponse,
   PostWithUserResponse,
 } from "./response";
-import { CommentRepository, PostRepository } from "../repositories";
+import {
+  CommentRepository,
+  NotificationRepository,
+  PostRepository,
+} from "../repositories";
 import { Pagination } from "../shared/pagination.model";
 import { isMongoId } from "class-validator";
 import { truncateValue } from "../core/utils/truncate";
+import { NotificationAction } from "../shared/notification.types";
 
 @JsonController("/posts")
 @Service()
@@ -33,7 +38,8 @@ export class PostController extends BaseService {
     private _postService: PostService,
     private _notificationService: NotificationService,
     private _postRepository: PostRepository,
-    private _commentRepository: CommentRepository
+    private _commentRepository: CommentRepository,
+    private _notificationRepository: NotificationRepository
   ) {
     super(__filename);
   }
@@ -141,10 +147,29 @@ export class PostController extends BaseService {
 
     const post = await this._postRepository.updatePost(<SocialPost>query);
 
-    await this._notificationService.notifyAboutPostLike(
+    const notification =
+      await this._notificationRepository.getNotificationByActionMetadata(
+        NotificationAction.POST_LIKE,
+        { postId }
+      );
+
+    // Check if the post's owner has already been notified about the like
+    if (
+      notification &&
+      notification.actionMetadata.actionDatabaseDocuments.includes(userId)
+    )
+      return;
+
+    // Notify the post's owner about the like
+    await this._notificationService.notifyAboutActionOnContent(
       post.user.toString(),
-      post._id.toString(),
-      truncateValue(post.content)
+      "post",
+      NotificationAction.POST_LIKE,
+      {
+        actionDatabaseDocuments: [userId],
+        postId: post._id.toString(),
+        contentBrief: truncateValue(post.content),
+      }
     );
   }
   // #endregion
@@ -169,8 +194,19 @@ export class PostController extends BaseService {
       $pull: { likes: userId },
     };
 
-    await this._postRepository.updatePost(<SocialPost>query);
+    const post = await this._postRepository.updatePost(<SocialPost>query);
+
+    // Remove the notification about the like
+    await this._notificationService.removeNotificationAction(
+      post.user.toString(),
+      NotificationAction.POST_LIKE,
+      {
+        actionDatabaseDocuments: [userId],
+        postId,
+      }
+    );
   }
+  // #endregion
 
   // #region Comment on a post
   @Authorized()
@@ -209,7 +245,34 @@ export class PostController extends BaseService {
       $addToSet: { comments: createdComment._id },
     };
 
-    await this._postRepository.updatePost(<SocialPost>query);
+    const post = await this._postRepository.updatePost(<SocialPost>query);
+
+    const notification =
+      await this._notificationRepository.getNotificationByActionMetadata(
+        NotificationAction.POST_COMMENT,
+        { postId }
+      );
+
+    // Check if the post's owner has already been notified about the comment
+    if (
+      notification &&
+      notification.actionMetadata.actionDatabaseDocuments.includes(
+        createdComment._id
+      )
+    )
+      return CommentResponse.getCommentResponse(createdComment);
+
+    // Notify the post's owner about the comment
+    await this._notificationService.notifyAboutActionOnContent(
+      post.user.toString(),
+      "post",
+      NotificationAction.POST_COMMENT,
+      {
+        actionDatabaseDocuments: [createdComment._id],
+        postId: post._id.toString(),
+        contentBrief: truncateValue(post.content),
+      }
+    );
 
     return CommentResponse.getCommentResponse(createdComment);
   }

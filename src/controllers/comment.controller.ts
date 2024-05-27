@@ -14,19 +14,23 @@ import { OpenAPI, ResponseSchema } from "routing-controllers-openapi";
 import { Service } from "typedi";
 import { BaseService, Context, throwError } from "../core";
 import { CommentResponse, CommentWithUserResponse } from "./response";
-import { CommentService } from "../services";
+import { CommentService, NotificationService } from "../services";
 import { CommentOnPostRequest } from "./request";
-import { CommentRepository } from "../repositories";
+import { CommentRepository, NotificationRepository } from "../repositories";
 import { Comment } from "../models";
 import { Pagination } from "../shared/pagination.model";
 import { isMongoId } from "class-validator";
+import { NotificationAction } from "../shared/notification.types";
+import { truncateValue } from "../core/utils/truncate";
 
 @JsonController("/comments")
 @Service()
 export class CommentController extends BaseService {
   constructor(
     private _commentService: CommentService,
-    private _commentRepository: CommentRepository
+    private _notificationService: NotificationService,
+    private _commentRepository: CommentRepository,
+    private _notificationRepository: NotificationRepository
   ) {
     super(__filename);
   }
@@ -102,7 +106,33 @@ export class CommentController extends BaseService {
       $addToSet: { likes: userId },
     };
 
-    await this._commentRepository.updateComment(<Comment>query);
+    const comment = await this._commentRepository.updateComment(<Comment>query);
+
+    const notification =
+      await this._notificationRepository.getNotificationByActionMetadata(
+        NotificationAction.COMMENT_LIKE,
+        { commentId }
+      );
+
+    // Check if the comments's owner has already been notified about the like
+    if (
+      notification &&
+      notification.actionMetadata.actionDatabaseDocuments.includes(userId)
+    )
+      return;
+
+    // Notify the comment's owner about the like
+    await this._notificationService.notifyAboutActionOnContent(
+      comment.user.toString(),
+      "comment",
+      NotificationAction.COMMENT_LIKE,
+      {
+        actionDatabaseDocuments: [userId],
+        postId: comment.post.toString(),
+        commentId: comment._id.toString(),
+        contentBrief: truncateValue(comment.content),
+      }
+    );
   }
   // #endregion
 
@@ -128,6 +158,16 @@ export class CommentController extends BaseService {
     };
 
     await this._commentRepository.updateComment(<Comment>query);
+
+    // Remove the notification about the like
+    await this._notificationService.removeNotificationAction(
+      userId,
+      NotificationAction.COMMENT_LIKE,
+      {
+        actionDatabaseDocuments: [userId],
+        commentId,
+      }
+    );
   }
 
   // #region Reply to a comment
