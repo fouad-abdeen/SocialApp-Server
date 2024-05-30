@@ -1,4 +1,5 @@
 import { Container } from "typedi";
+import { Express } from "express";
 import {
   AuthHashProvider,
   Logger,
@@ -9,12 +10,13 @@ import {
 } from "..";
 import { AuthTokenProvider } from "../providers/auth/auth-token.provider";
 import { FileUploadProvider } from "../providers/file-upload";
+import { Server } from "http";
 
 /**
  * Registers services in container
  * Used for dependency injection
  */
-export const registerServices = async (logger: Logger) => {
+export const registerServices = async (server: Server, logger: Logger) => {
   logger.info("Registering Bcrypt Service");
   Container.set(AuthHashProvider, new AuthHashProvider());
 
@@ -36,7 +38,7 @@ export const registerServices = async (logger: Logger) => {
   logger.info("Registering Socket Service");
   Container.set(
     SocketConnectionProvider,
-    new SocketConnectionProvider(logger, env.frontend.url)
+    new SocketConnectionProvider(server, env.frontend.url, logger)
   );
 
   logger.info("Registering File Upload Service");

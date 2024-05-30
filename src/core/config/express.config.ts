@@ -8,13 +8,18 @@ import swaggerUiExpress from "swagger-ui-express";
 import { getSwaggerSpec } from "./swagger.config";
 import { env } from ".";
 import { AuthService } from "../../services";
+import { Logger } from "..";
+import { registerServices } from "./container.config";
+import { Server, createServer } from "http";
 
 export class Express {
-  readonly app: express.Application;
+  private readonly app: express.Application;
+  private readonly server: Server;
   private authService: AuthService;
 
-  constructor(dirname: string) {
+  constructor(dirname: string, logger: Logger) {
     this.app = express();
+    this.server = createServer(this.app);
 
     this.app.use(httpContext.middleware);
     this.app.use(
@@ -34,10 +39,11 @@ export class Express {
     this.configExpress(dirname);
     this.configHealthRoute();
     this.configSwaggerRoute(dirname);
+    registerServices(this.server, logger);
   }
 
   configExpress(dirname: string) {
-    this.app.listen(env.app.port);
+    this.server.listen(env.app.port);
 
     useExpressServer(this.app, {
       cors: true,

@@ -92,7 +92,7 @@ export const env = {
   },
 
   webSocket: {
-    serverPort: getEnvVariable("WEBSOCKET_SERVER_PORT", "3031"),
+    socketIoPath: getEnvVariable("SOCKET_IO_PATH", "/socket/"),
   },
 
   awsS3: {

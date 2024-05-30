@@ -11,12 +11,9 @@ export class Application {
   express: Express;
 
   constructor(dirname: string) {
-    const log = new Logger("App");
-    log.info("Starting...");
-
-    registerServices(log).then(() => {
-      this.express = new Express(dirname);
-      displayBanner(log);
-    });
+    const logger = new Logger("App");
+    logger.info("Starting...");
+    this.express = new Express(dirname, logger);
+    displayBanner(logger);
   }
 }

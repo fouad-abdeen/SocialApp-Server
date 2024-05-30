@@ -13,5 +13,8 @@ export function displayBanner(log: Logger): void {
   log.info(``);
   log.info(`Health API   : ${route}${env.app.routePrefix}/health`);
   log.info(`Docs API     : ${route}${env.app.routePrefix}/docs`);
+  log.info(
+    `Socket.IO server is running on ${route}${env.webSocket.socketIoPath}`
+  );
   log.info("-------------------------------------------------------\n");
 }
