@@ -1,5 +1,4 @@
 import { Container } from "typedi";
-import { Express } from "express";
 import {
   AuthHashProvider,
   Logger,

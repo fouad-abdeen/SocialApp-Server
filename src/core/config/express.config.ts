@@ -9,8 +9,8 @@ import { getSwaggerSpec } from "./swagger.config";
 import { env } from ".";
 import { AuthService } from "../../services";
 import { Logger } from "..";
-import { registerServices } from "./container.config";
 import { Server, createServer } from "http";
+import { registerServices } from "./container.config";
 
 export class Express {
   private readonly app: express.Application;
@@ -21,25 +21,26 @@ export class Express {
     this.app = express();
     this.server = createServer(this.app);
 
-    this.app.use(httpContext.middleware);
-    this.app.use(
-      cors({
-        origin: env.frontend.url,
-        methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-        allowedHeaders: ["Content-Type"],
-        exposedHeaders: ["Set-Cookie"],
-        credentials: true,
-      })
-    );
-    this.app.use(cookieParser());
+    registerServices(this.server, logger).then(() => {
+      this.app.use(httpContext.middleware);
+      this.app.use(
+        cors({
+          origin: env.frontend.url,
+          methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+          allowedHeaders: ["Content-Type"],
+          exposedHeaders: ["Set-Cookie"],
+          credentials: true,
+        })
+      );
+      this.app.use(cookieParser());
 
-    // Attach typedi container to routing-controllers
-    useContainer(Container);
+      // Attach typedi container to routing-controllers
+      useContainer(Container);
 
-    this.configExpress(dirname);
-    this.configHealthRoute();
-    this.configSwaggerRoute(dirname);
-    registerServices(this.server, logger);
+      this.configExpress(dirname);
+      this.configHealthRoute();
+      this.configSwaggerRoute(dirname);
+    });
   }
 
   configExpress(dirname: string) {
