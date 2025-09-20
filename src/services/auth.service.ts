@@ -254,6 +254,8 @@ export class AuthService extends BaseService {
     this.setRequestId();
     this._logger.info("Attempting to authorize user");
 
+    this._logger.warn(JSON.stringify(action.request.cookies));
+
     // #region Verify Authorization Access Token
     this._logger.info("Verifying authorization access token");
 
