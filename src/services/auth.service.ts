@@ -25,7 +25,6 @@ import {
   AuthTokenType,
   AuthTokens,
 } from "../shared/auth.types";
-
 @Service()
 export class AuthService extends BaseService {
   constructor(
@@ -41,7 +40,7 @@ export class AuthService extends BaseService {
     if (!this._mailService) this._mailService = Container.get(MailProvider);
   }
 
-  async signUpUser(userSignupData: SignupRequest): Promise<AuthResponse> {
+  async signUpUser(userSignupData: SignupRequest): Promise<null> {
     this.setRequestId();
     this._logger.info(
       `Attempting to sign up user with username ${userSignupData.username}`
@@ -124,10 +123,7 @@ export class AuthService extends BaseService {
       signedAt: +new Date(),
     });
 
-    return {
-      ...createdUser,
-      tokens,
-    };
+    return null;
   }
 
   async signOutUser(tokens: AuthTokens): Promise<void> {

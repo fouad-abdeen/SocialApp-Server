@@ -35,7 +35,11 @@ export interface IAuthTokenProvider {
    * @param skipExpiredError if true, no error will be thrown if the token is expired (useful for refreshing tokens)
    * @returns decoded payload or null
    */
-  verifyToken<T>(token: string, options?: VerifyOptions): T | null;
+  verifyToken<T>(
+    token: string,
+    options?: VerifyOptions,
+    skipExpiredError?: boolean
+  ): T | null;
 }
 
 export type TokenPayload = JwtPayload;

@@ -166,7 +166,7 @@ export class NotificationService extends BaseService {
     userId: string,
     notification: Notification
   ): Promise<void> {
-    if (!this.isUserOnline(userId)) return;
+    if (!(await this.isUserOnline(userId))) return;
 
     this._logger.info(
       `Sending a web notification to the user with id ${userId}`

@@ -56,35 +56,14 @@ export class AuthController extends BaseService {
   async signup(
     @Body({ required: true }) signupRequest: SignupRequest,
     @Res() response: Response
-  ): Promise<UserResponse> {
+  ): Promise<null> {
     this.setRequestId();
     this._logger.info(
       `Requesting signup for user with username ${signupRequest.username}`
     );
-
-    const signupResponse = await this._authService.signUpUser(signupRequest);
-    const { tokens, ...user } = signupResponse;
-
+    await this._authService.signUpUser(signupRequest);
     response.status(201);
-
-    response.setHeader("Set-Cookie", [
-      `accessToken=${tokens.accessToken}; HttpOnly; Secure; SameSite=None;`,
-      `refreshToken=${tokens.refreshToken}; HttpOnly; Secure; SameSite=None;`,
-    ]);
-
-    response.cookie("accessToken", tokens.accessToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-    });
-
-    response.cookie("refreshToken", tokens.refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-    });
-
-    return UserResponse.getUserResponse(user);
+    return null;
   }
   // #endregion
 
