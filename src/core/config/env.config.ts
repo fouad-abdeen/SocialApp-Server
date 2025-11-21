@@ -32,10 +32,10 @@ export const env = {
     name: getEnvVariable("APP_NAME", "SocialApp"),
     version: getEnvVariable("APP_VERSION", "1.0.0"),
     description: getEnvVariable("APP_DESCRIPTION", "A simple social media app"),
-    schema: getEnvVariable("APP_SCHEMA", "http"),
-    host: getEnvVariable("APP_HOST", "localhost"),
-    port: getEnvVariable("APP_PORT", "3030"),
-    routePrefix: getEnvVariable("APP_ROUTE_PREFIX", ""),
+    schema: getEnvVariable("SCHEMA", "http"),
+    host: getEnvVariable("HOST", "localhost"),
+    port: getEnvVariable("PORT", "3030"),
+    routePrefix: getEnvVariable("ROUTE_PREFIX", ""),
   },
 
   mongoDB: {
