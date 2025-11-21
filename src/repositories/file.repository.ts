@@ -14,7 +14,9 @@ export class FileRepository extends BaseService implements IFileRepository {
     if (!this._mongoService)
       this._mongoService = Container.get(MongodbConnectionProvider);
 
-    this._model = this._mongoService.getModel(File, { timestamps: true });
+    this._model = this._mongoService.getModel(File, {
+      timestamps: true,
+    }) as unknown as Model<File>;
   }
 
   async createFile(key: string, url: string): Promise<File> {

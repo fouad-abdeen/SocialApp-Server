@@ -20,7 +20,9 @@ export class CommentRepository
     if (!this._mongoService)
       this._mongoService = Container.get(MongodbConnectionProvider);
 
-    this._model = this._mongoService.getModel(Comment, { timestamps: true });
+    this._model = this._mongoService.getModel(Comment, {
+      timestamps: true,
+    }) as unknown as Model<Comment>;
   }
 
   async createComment(comment: Comment): Promise<Comment> {
@@ -93,7 +95,7 @@ export class CommentRepository
       .lean()
       .exec();
 
-    return comments as Array<Comment & {user: PopulatedUser}>;
+    return comments as unknown as Array<Comment & { user: PopulatedUser }>;
   }
 
   async getCommentReplies(
@@ -117,7 +119,7 @@ export class CommentRepository
       .lean()
       .exec();
 
-    return comments as Array<Comment & {user: PopulatedUser}>;
+    return comments as unknown as Array<Comment & { user: PopulatedUser }>;
   }
 
   async getCommentById(commentId: string): Promise<Comment> {

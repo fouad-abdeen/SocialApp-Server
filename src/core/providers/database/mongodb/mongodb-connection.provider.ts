@@ -1,4 +1,7 @@
-import { IMongodbConnectionProvider } from "./mongodb.interface";
+// NOTE: not implementing the interface here because TypeScript expands
+// some third-party generic types into extremely large unions which
+// can trigger TS2590 (type too complex). Keep the runtime shape but
+// avoid the `implements` clause to prevent the compiler error.
 import { connect, Connection, connection, SchemaOptions } from "mongoose";
 import {
   AnyParamConstructor,
@@ -8,10 +11,7 @@ import { Logger } from "../../../logger";
 import { getModelForClass } from "@typegoose/typegoose";
 import { BaseService } from "../../../base.service";
 
-export class MongodbConnectionProvider
-  extends BaseService
-  implements IMongodbConnectionProvider
-{
+export class MongodbConnectionProvider extends BaseService {
   private _connection: Connection;
   private _dbHost: string;
   private _dbName: string;
@@ -49,10 +49,14 @@ export class MongodbConnectionProvider
     schemaOptions?: SchemaOptions
   ): ReturnModelType<U> {
     this.dbConnectionCheck();
+    // Cast through `unknown` to prevent TypeScript from expanding
+    // `getModelForClass`'s inferred return into an excessively large
+    // union type (TS2590). This preserves type usage for callers
+    // while avoiding the compiler limitation.
     return getModelForClass(documentClass, {
       existingConnection: this._connection,
-      schemaOptions,
-    });
+      schemaOptions: schemaOptions as any,
+    }) as unknown as ReturnModelType<U>;
   }
 
   async closeConnection(): Promise<void> {
@@ -69,13 +73,13 @@ export class MongodbConnectionProvider
 
     if (deletePrevious) {
       this._logger.info(
-        `Dropping collection ${name} from ${this._connection.db.databaseName}`
+        `Dropping collection ${name} from ${this._connection.db!.databaseName}`
       );
       await this._connection.dropCollection(name);
     }
 
     this._logger.info(
-      `Creating collection ${name} in ${this._connection.db.databaseName}`
+      `Creating collection ${name} in ${this._connection.db!.databaseName}`
     );
     await this._connection.createCollection(name);
   }

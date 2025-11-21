@@ -1,10 +1,5 @@
 import { Model } from "mongoose";
-import {
-  BaseService,
-  Context,
-  MongodbConnectionProvider,
-  throwError,
-} from "../core";
+import { BaseService, MongodbConnectionProvider, throwError } from "../core";
 import { INotificationRepository } from "./interfaces";
 import { Notification } from "../models";
 import Container, { Service } from "typedi";
@@ -26,7 +21,7 @@ export class NotificationRepository
 
     this._model = this._mongoService.getModel(Notification, {
       timestamps: true,
-    });
+    }) as unknown as Model<Notification>;
   }
 
   async createNotification(notification: Notification): Promise<Notification> {

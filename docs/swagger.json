@@ -912,6 +912,24 @@
         "/users/avatar": {
             "post": {
                 "operationId": "UserController.uploadAvatar",
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "avatar": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "required": [
+                                    "avatar"
+                                ],
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "content": {
@@ -999,9 +1017,23 @@
                 "operationId": "PostController.submitPost",
                 "requestBody": {
                     "content": {
-                        "application/json": {
+                        "multipart/form-data": {
                             "schema": {
-                                "$ref": "#/components/schemas/SubmitPostRequest"
+                                "allOf": [
+                                    {
+                                        "$ref": "#/components/schemas/SubmitPostRequest"
+                                    },
+                                    {
+                                        "properties": {
+                                            "image": {
+                                                "type": "string",
+                                                "format": "binary"
+                                            }
+                                        },
+                                        "required": [],
+                                        "type": "object"
+                                    }
+                                ]
                             }
                         }
                     },

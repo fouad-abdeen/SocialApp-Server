@@ -20,7 +20,9 @@ export class UserRepository extends BaseService implements IUserRepository {
     if (!this._mongoService)
       this._mongoService = Container.get(MongodbConnectionProvider);
 
-    this._model = this._mongoService.getModel(User, { timestamps: true });
+    this._model = this._mongoService.getModel(User, {
+      timestamps: true,
+    }) as unknown as Model<User>;
 
     (async () => {
       await this._model.createIndexes();

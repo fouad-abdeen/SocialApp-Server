@@ -22,7 +22,9 @@ export class PostRepository extends BaseService implements IPostRepository {
     if (!this._mongoService)
       this._mongoService = Container.get(MongodbConnectionProvider);
 
-    this._model = this._mongoService.getModel(Post, { timestamps: true });
+    this._model = this._mongoService.getModel(Post, {
+      timestamps: true,
+    }) as unknown as Model<Post>;
 
     (async () => {
       await this._model.createIndexes();
@@ -84,7 +86,7 @@ export class PostRepository extends BaseService implements IPostRepository {
       .lean()
       .exec();
 
-    return posts as Array<Post & { user: PopulatedUser }>;
+    return posts as unknown as Array<Post & { user: PopulatedUser }>;
   }
 
   async getUserPosts(pagination: Pagination, userId: string): Promise<Post[]> {
@@ -127,6 +129,6 @@ export class PostRepository extends BaseService implements IPostRepository {
 
     if (!post) throwError(`Post with Id ${postId} not found`, 404);
 
-    return post as Post & { user: PopulatedUser };
+    return post as unknown as Post & { user: PopulatedUser };
   }
 }
