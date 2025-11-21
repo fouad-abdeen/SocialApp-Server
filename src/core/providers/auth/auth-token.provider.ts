@@ -47,18 +47,10 @@ export class AuthTokenProvider
     return token;
   }
 
-  verifyToken<T>(
-    token: string,
-    options?: VerifyOptions,
-    skipExpiredError = false
-  ): T {
+  verifyToken<T>(token: string, options?: VerifyOptions): T {
     try {
       return verify(token, this.secret, options) as T;
     } catch (error: any) {
-      if (skipExpiredError && error instanceof TokenExpiredError) {
-        return null as T;
-      }
-
       this._logger.error("Error verifying token:", error.message);
       throw new Error(error.message);
     }

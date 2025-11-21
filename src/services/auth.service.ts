@@ -118,9 +118,6 @@ export class AuthService extends BaseService {
 
     // Generate access and refresh tokens
     const tokens = this.getTokens(<AuthPayload>{
-      identityId: id,
-      email: email,
-      signedAt: +new Date(),
     });
 
     return null;
@@ -223,7 +220,20 @@ export class AuthService extends BaseService {
     await this._userRepository.updateUser({
       _id: user._id,
       tokensDenylist: updatedtokensDenylist,
-    } as User);
+    // Update the user's tokens denylist in background (non-blocking)
+    this._userRepository
+      .updateUser({
+        _id: user._id,
+        tokensDenylist: updatedtokensDenylist,
+      } as User)
+      .then(() =>
+        this._logger.info("Cleared expired tokens from user's denylist")
+      )
+      .catch((error: any) =>
+        this._logger.error(
+          `Failed to clear expired tokens for user ${user._id}: ${error.message}`
+        )
+      );
     //#endregion
 
     this._logger.info(`Verifying user's password`);
@@ -254,38 +264,27 @@ export class AuthService extends BaseService {
     this.setRequestId();
     this._logger.info("Attempting to authorize user");
 
-    this._logger.warn(JSON.stringify(action.request.cookies));
-
     // #region Verify Authorization Access Token
     this._logger.info("Verifying authorization access token");
 
-    if (!accessToken)
-      throwError("Unauthorized, missing authorization access token", 401);
+    let payload: AuthPayload | null = null;
 
-    let payload = {} as AuthPayload;
+    if (accessToken) {
+      try {
+        payload = this._tokenService.verifyToken<AuthPayload>(accessToken, {});
 
-    try {
-      // Verify the access token and get the payload
-      // If the token is expired, null will be returned
-      payload = this._tokenService.verifyToken<AuthPayload>(
-        accessToken,
-        {},
-        true
-      );
-
-      if (payload)
-        if (payload.tokenType !== AuthTokenType.ACCESS_TOKEN)
-          throwError("invalid token", 401);
-    } catch (error: any) {
-      throwError(
-        `Failed to verify authorization access token, ${error.message}`,
-        401
-      );
+        if (payload)
+          if (payload.tokenType !== AuthTokenType.ACCESS_TOKEN)
+            throwError("invalid token", 401);
+      } catch (error: any) {
+        this._logger.error(`Failed to verify access token, ${error.message}`);
+      }
     }
 
     // If access token is expired, attempt to refresh it
     if (!payload) {
       const refreshToken = action.request.cookies["refreshToken"];
+      if (!refreshToken) throwError("No refresh token provided", 401);
 
       this._logger.info("Attempting to refresh access token");
 
@@ -327,12 +326,12 @@ export class AuthService extends BaseService {
       }
     }
 
-    user = await this._userRepository.getUserByEmail(payload.email);
+    user = await this._userRepository.getUserByEmail(payload!.email);
     user._id = (user._id as string).toString();
 
     // Deny access if the user's password was updated after the access token was issued
     if (
-      <number>payload.signedAt < user.passwordUpdatedAt ||
+      <number>payload!.signedAt < user.passwordUpdatedAt ||
       user.tokensDenylist.find((object) => object.token === accessToken)
     )
       throwError("Authorization token is not valid anymore", 401);
