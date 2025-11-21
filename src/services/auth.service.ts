@@ -116,10 +116,6 @@ export class AuthService extends BaseService {
     );
     // #endregion
 
-    // Generate access and refresh tokens
-    const tokens = this.getTokens(<AuthPayload>{
-    });
-
     return null;
   }
 
@@ -216,10 +212,6 @@ export class AuthService extends BaseService {
       (token) => token.expiresIn > currentTimestampInSeconds
     );
 
-    // Update the user's tokens denylist
-    await this._userRepository.updateUser({
-      _id: user._id,
-      tokensDenylist: updatedtokensDenylist,
     // Update the user's tokens denylist in background (non-blocking)
     this._userRepository
       .updateUser({
