@@ -144,7 +144,7 @@ export class AuthService extends BaseService {
       identityId = id;
       accessTokenExpiry = exp;
     } catch (error: any) {
-      throwError(`Failed to verify access token, ${error.message}`, 401);
+      this._logger.error(`Failed to verify access token, ${error.message}`);
     }
     // #endregion
 
@@ -156,27 +156,40 @@ export class AuthService extends BaseService {
 
       refreshTokenExpiry = exp;
     } catch (error: any) {
-      throwError(`Failed to verify refresh token, ${error.message}`, 401);
+      this._logger.error(`Failed to verify refresh token, ${error.message}`);
     }
     // #endregion
 
-    this._logger.info(
-      "Adding access and refresh tokens to the user's Denylist"
-    );
+    // #region Prepare Denylist
+    const denyList = [] as Array<{ token: string; expiresIn: number }>;
 
-    const updatedUserData = <unknown>{
-      _id: identityId,
-      $addToSet: {
-        tokensDenylist: {
-          $each: [
-            { token: tokens.accessToken, expiresIn: accessTokenExpiry },
-            { token: tokens.refreshToken, expiresIn: refreshTokenExpiry },
-          ],
+    if (accessTokenExpiry)
+      denyList.push({
+        token: tokens.accessToken,
+        expiresIn: accessTokenExpiry,
+      });
+
+    if (refreshTokenExpiry)
+      denyList.push({
+        token: tokens.refreshToken,
+        expiresIn: refreshTokenExpiry,
+      });
+    // #endregion
+
+    if (identityId && denyList.length > 0) {
+      this._logger.info("Adding tokens to the user's Denylist");
+
+      const updatedUserData = <unknown>{
+        _id: identityId,
+        $addToSet: {
+          tokensDenylist: {
+            $each: denyList,
+          },
         },
-      },
-    };
+      };
 
-    await this._userRepository.updateUser(<User>updatedUserData);
+      await this._userRepository.updateUser(<User>updatedUserData);
+    }
   }
 
   async authenticateUser({
